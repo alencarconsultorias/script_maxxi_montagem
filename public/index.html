@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maxxi Montagem — Integrador de Notas OMM</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-logo">
+      <i data-lucide="package-open" class="logo-icon"></i>
+      <div>
+        <h1>Maxxi Montagem</h1>
+        <p>Leitor, Editor e Integrador de Notas OMM</p>
+      </div>
+    </div>
+    <div class="header-badge">
+      <span class="status-indicator-dot online"></span>
+      <span>Sistema Stateless Ativo</span>
+    </div>
+  </header>
+
+  <main class="app-container">
+
+    <!-- STEP 1: UPLOAD DO PDF -->
+    <section class="card step-section" id="section-upload">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h2>Carregar Ordem de Montagem (PDF)</h2>
+        <p class="section-desc">Selecione ou arraste o arquivo PDF tabular gerado pelo sistema Liliani para extrair os dados em memória.</p>
+        
+        <div class="upload-dropzone" id="dropzone">
+          <input type="file" id="file-input" accept=".pdf" style="display: none;">
+          <i data-lucide="cloud-upload" class="upload-icon"></i>
+          <h3>Arraste o PDF aqui</h3>
+          <p>ou clique para explorar arquivos</p>
+          <span class="file-limits">Limite de arquivo: 10MB (.pdf)</span>
+        </div>
+
+        <div id="file-details" class="file-details-container" style="display: none;">
+          <div class="file-info-row">
+            <i data-lucide="file-text" class="file-icon"></i>
+            <div>
+              <h4 id="file-name">nome_do_arquivo.pdf</h4>
+              <p id="file-size">0.0 KB</p>
+            </div>
+            <button class="btn btn-icon btn-danger" id="btn-remove-file" title="Remover arquivo">
+              <i data-lucide="trash-2"></i>
+            </button>
+          </div>
+          <div class="extraction-success" style="display: none;" id="extraction-alert">
+            <i data-lucide="check-circle-2"></i>
+            <span>Sucesso! <strong id="extracted-count">0</strong> ordens extraídas com sucesso.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: DEFAULTS GLOBAIS -->
+    <section class="card step-section disabled-step" id="section-defaults">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h2>Configurar Valores Padrão (Defaults)</h2>
+        <p class="section-desc">Esses valores serão aplicados automaticamente em todas as notas do lote para economizar preenchimento manual.</p>
+        
+        <div class="grid-form">
+          <div class="form-group">
+            <label for="def-id-empresa">ID Empresa</label>
+            <input type="number" id="def-id-empresa" value="0">
+          </div>
+          <div class="form-group">
+            <label for="def-classif">Classificação Cliente</label>
+            <input type="text" id="def-classif" value="ML" placeholder="Ex: ML">
+          </div>
+          <div class="form-group">
+            <label for="def-cep">CEP Padrão</label>
+            <input type="text" id="def-cep" value="65000000" maxlength="8">
+          </div>
+          <div class="form-group">
+            <label for="def-tipo-ordem">Tipo Ordem Montagem</label>
+            <input type="number" id="def-tipo-ordem" value="1">
+          </div>
+          <div class="form-group">
+            <label for="def-prod-cod">Código Produto Padrão</label>
+            <input type="text" id="def-prod-cod" value="2026">
+          </div>
+        </div>
+        <div class="actions-row">
+          <button class="btn btn-secondary" id="btn-apply-defaults" disabled>
+            <i data-lucide="sparkles"></i> Aplicar a Todas as Notas
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3: REVISÃO E EDIÇÃO -->
+    <section class="card step-section disabled-step" id="section-review">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="section-header-flex">
+          <div>
+            <h2>Revisão e Edição de Ordens</h2>
+            <p class="section-desc">Visualize as ordens identificadas. Clique sobre uma linha para expandir e editar os dados da ordem ou dos itens.</p>
+          </div>
+          <div class="badge-counter" id="badge-counter-container" style="display: none;">
+            <span id="badge-total">0</span> Notas Extraídas
+          </div>
+        </div>
+
+        <!-- Tabela de Ordens -->
+        <div class="table-container">
+          <table class="orders-table" id="orders-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">Seq</th>
+                <th style="width: 100px;">Pedido</th>
+                <th>Cliente</th>
+                <th style="width: 80px;">Loja</th>
+                <th style="width: 180px;">Produto</th>
+                <th style="width: 100px;">Valor Comis.</th>
+                <th style="width: 120px;">Status Envio</th>
+                <th style="width: 60px;"></th>
+              </tr>
+            </thead>
+            <tbody id="orders-tbody">
+              <tr>
+                <td colspan="8" class="empty-table">Nenhum PDF carregado ainda. Aguardando arquivo...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 4: PARÂMETROS DA API & ENVIO -->
+    <section class="card step-section disabled-step" id="section-api">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h2>Parâmetros da API & Envio</h2>
+        <p class="section-desc">Defina a URL de destino da API de montagem e as credenciais necessárias nos Headers.</p>
+        
+        <div class="grid-form">
+          <div class="form-group span-2">
+            <label for="api-url">URL Base / Endpoint</label>
+            <input type="url" id="api-url" placeholder="https://controlmobile.net/api/montagem/cadastrar" value="https://controlmobile.net/api/montagem/cadastrar">
+          </div>
+          <div class="form-group">
+            <label for="api-method">Método HTTP</label>
+            <select id="api-method">
+              <option value="POST" selected>POST</option>
+              <option value="PUT">PUT</option>
+              <option value="PATCH">PATCH</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="api-key">API_KEY</label>
+            <input type="password" id="api-key" placeholder="Header API_KEY (ou puxa do .env)" value="">
+          </div>
+          <div class="form-group">
+            <label for="api-secret">SECRET_KEY</label>
+            <input type="password" id="api-secret" placeholder="Header SECRET_KEY (ou puxa do .env)" value="">
+          </div>
+        </div>
+
+        <div class="action-submit-zone">
+          <button class="btn btn-primary btn-large" id="btn-publish-all" disabled>
+            <i data-lucide="rocket"></i> Publicar Todas na API
+          </button>
+          <button class="btn btn-success btn-large" id="btn-download-csv" style="display: none;">
+            <i data-lucide="download"></i> Baixar Relatório CSV
+          </button>
+        </div>
+
+        <!-- Console / Monitor de Progresso -->
+        <div class="monitor-console" id="monitor-console" style="display: none;">
+          <div class="console-header">
+            <h3>Monitor de Integração</h3>
+            <div class="console-status">
+              Enviando: <span id="console-progress">0/0</span>
+            </div>
+          </div>
+          <div class="console-progress-bar">
+            <div class="progress-fill" id="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+          <div class="console-logs" id="console-logs">
+            <!-- Logs em tempo real entrarão aqui -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>Script Maxxi Montagem &copy; 2026. Todos os direitos reservados. Processamento 100% em memória local.</p>
+  </footer>
+
+  <!-- Modal/Template de Edição de Ordem (Injetado dinamicamente via JS) -->
+  <script src="app.js"></script>
+  <script>
+    // Inicializar ícones do Lucide
+    lucide.createIcons();
+  </script>
+</body>
+</html>

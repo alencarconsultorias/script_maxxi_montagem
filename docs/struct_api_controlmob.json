@@ -1,0 +1,50 @@
+[
+    {
+        "codigoInternoMontador": "string",
+        "dataAgendamento": "yyyy-MM-dd'T'HH:mm:ss",
+        "itens": [
+            {
+                "dataPrevisaoEntrega": "yyyy-MM-dd",
+                "dataPrevisaoMontagem": "yyyy-MM-dd",
+                "descProduto": "string",
+                "nroFilial": 0,
+                "nroOrdemMontagem": 0,
+                "nroPedido": 0,
+                "nroProduto": "string",
+                "observacaoMontagem": "string",
+                "qtdHorasMontagem": 0,
+                "quantidade": 0,
+                "valorMontagem": 0,
+                "valorUnitario": 0
+            }
+        ],
+        "nroOrdemMontagem": 0,
+        "ordemServico": {
+            "bairro": "string",
+            "cep": "string",
+            "cidade": "string",
+            "codigoInternoClassificacaoCliente": "string",
+            "codigoInternoCliente": "string",
+            "complemento": "string",
+            "cpf": "string",
+            "dataPrevisaoMontagem": "2026-05-27T22:23:12.196Z",
+            "endereco": "string",
+            "idEmpresa": 0,
+            "nomeCliente": "string",
+            "nroDDD": "string",
+            "nroFilial": 0,
+            "nroOrdemMontagem": 0,
+            "nroPedido": 0,
+            "nroTelefone": "string",
+            "nroTelefoneExtra": "string",
+            "nroVendedor": 0,
+            "numero": "string",
+            "observacao": "string",
+            "observacaoPedido": "string",
+            "siglaFilial": "string",
+            "tipoOrdemMontagem": 0,
+            "uf": "string"
+        },
+        "totalItensMontagem": 0
+    }
+]
