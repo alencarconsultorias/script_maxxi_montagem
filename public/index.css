@@ -915,31 +915,95 @@ body {
 }
 
 /* =============================================
-   RESPONSIVIDADE
+   RESPONSIVIDADE — TABLETS (≤ 768px)
    ============================================= */
 @media (max-width: 768px) {
   .app-header {
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
     text-align: center;
+    padding: 12px 16px;
   }
-  
+
+  .header-logo-img {
+    height: 40px;
+  }
+
+  .app-container {
+    margin: 24px auto;
+    padding: 0 16px;
+    gap: 20px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
   .step-section {
     flex-direction: column;
+    gap: 16px;
   }
-  
+
   .step-num {
-    margin: 0 auto;
+    margin: 0;
   }
-  
+
+  .upload-dropzone {
+    padding: 36px 20px;
+  }
+
+  .section-header-flex {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .grid-form {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .actions-row {
+    flex-direction: column;
+  }
+
+  .actions-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .action-submit-zone {
     flex-direction: column;
+  }
+
+  .action-submit-zone .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-large {
+    padding: 14px 24px;
+  }
+
+  .form-actions-inline {
+    flex-direction: column;
+  }
+
+  .form-actions-inline .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Oculta coluna Produto na tabela em tablets */
+  .orders-table th:nth-child(5),
+  .orders-table td:nth-child(5) {
+    display: none;
   }
 
   .footer-main {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 28px 16px;
   }
 
   .footer-contact {
@@ -948,5 +1012,319 @@ body {
 
   .footer-dev {
     flex-direction: column;
+  }
+}
+
+/* =============================================
+   RESPONSIVIDADE — CELULARES (≤ 480px)
+   ============================================= */
+@media (max-width: 480px) {
+  .app-header {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .header-logo {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .header-logo-img {
+    height: 34px;
+  }
+
+  .header-logo h1 {
+    font-size: 1.15rem;
+  }
+
+  .header-logo p {
+    font-size: 0.72rem;
+  }
+
+  .header-badge {
+    font-size: 0.7rem;
+    padding: 4px 12px;
+  }
+
+  .app-container {
+    margin: 14px auto;
+    padding: 0 12px;
+    gap: 14px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .step-section {
+    gap: 12px;
+  }
+
+  .step-content h2 {
+    font-size: 1.1rem;
+  }
+
+  .section-desc {
+    font-size: 0.82rem;
+    margin-bottom: 16px;
+  }
+
+  .upload-dropzone {
+    padding: 24px 14px;
+    gap: 8px;
+  }
+
+  .upload-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .upload-dropzone h3 {
+    font-size: 0.95rem;
+  }
+
+  .upload-dropzone p,
+  .file-limits {
+    font-size: 0.78rem;
+  }
+
+  .file-details-container {
+    padding: 14px;
+    margin-top: 16px;
+  }
+
+  .file-info-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Formulário em coluna única */
+  .grid-form {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .form-group.span-2 {
+    grid-column: span 1;
+  }
+
+  /* Editor pane em coluna única */
+  .editor-pane.active {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .editor-pane .form-group.span-2 {
+    grid-column: span 1;
+  }
+
+  .editor-tabs {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: 12px;
+  }
+
+  .tab-btn {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+  }
+
+  /* ---- Tabela → cards no celular ---- */
+  .table-container {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    overflow-x: visible;
+  }
+
+  .orders-table {
+    display: block;
+    width: 100%;
+  }
+
+  .orders-table thead {
+    display: none;
+  }
+
+  .orders-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .orders-table tbody tr.main-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 4px;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 12px 14px;
+    cursor: pointer;
+  }
+
+  /* Seq */
+  .orders-table tbody tr.main-row td:nth-child(1) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    grid-row: 1 / 3;
+    grid-column: 1;
+    padding: 0;
+    border: none;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  /* Cliente */
+  .orders-table tbody tr.main-row td:nth-child(3) {
+    display: block;
+    grid-row: 1;
+    grid-column: 2;
+    padding: 0;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Pedido */
+  .orders-table tbody tr.main-row td:nth-child(2) {
+    display: block;
+    grid-row: 2;
+    grid-column: 2;
+    padding: 0;
+    border: none;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  /* Loja: oculta */
+  .orders-table tbody tr.main-row td:nth-child(4) {
+    display: none;
+  }
+
+  /* Produto: oculta */
+  .orders-table tbody tr.main-row td:nth-child(5) {
+    display: none;
+  }
+
+  /* Valor Comissão: oculta */
+  .orders-table tbody tr.main-row td:nth-child(6) {
+    display: none;
+  }
+
+  /* Status */
+  .orders-table tbody tr.main-row td:nth-child(7) {
+    display: flex;
+    align-items: center;
+    grid-row: 1 / 3;
+    grid-column: 3;
+    padding: 0;
+    border: none;
+  }
+
+  /* Seta */
+  .orders-table tbody tr.main-row td:nth-child(8) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    grid-row: 1 / 3;
+    grid-column: 4;
+    padding: 0;
+    border: none;
+  }
+
+  /* Linha vazia */
+  .orders-table tbody tr:not(.main-row):not(.details-row) td {
+    display: block;
+    padding: 16px;
+    text-align: center;
+    border: none;
+    background: #fff;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+  }
+
+  /* Linha de edição — conecta visualmente ao card acima */
+  .orders-table tbody tr.details-row {
+    display: block;
+    margin-top: -8px;
+  }
+
+  .orders-table tbody tr.details-row td {
+    display: block;
+    padding: 0;
+    border: none;
+  }
+
+  .orders-table tbody tr.main-row.active {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-color: transparent;
+  }
+
+  .editor-wrapper {
+    padding: 16px;
+    border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-bottom: none;
+    margin-bottom: 8px;
+  }
+
+  /* Monitor */
+  .monitor-console {
+    margin-top: 20px;
+  }
+
+  .console-header {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    padding: 10px 14px;
+  }
+
+  .console-logs {
+    font-size: 0.72rem;
+    padding: 12px;
+    max-height: 160px;
+  }
+
+  .btn-large {
+    padding: 14px 16px;
+    font-size: 0.95rem;
+  }
+
+  /* Footer */
+  .footer-main {
+    padding: 16px 12px;
+    gap: 16px;
+  }
+
+  .footer-whatsapp-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* WhatsApp flutuante menor */
+  .whatsapp-float {
+    bottom: 16px;
+    right: 16px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .whatsapp-float svg {
+    width: 26px;
+    height: 26px;
   }
 }
