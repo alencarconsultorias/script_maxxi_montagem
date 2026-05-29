@@ -42,6 +42,9 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     // 1. Extração do texto em memória
     const rawText = await extractTextFromPDF(req.file.buffer);
 
+    // Log do texto bruto (primeiros 2000 chars) para debug de parsing
+    console.log('[Server] Texto bruto extraído (primeiros 2000 chars):\n', rawText.slice(0, 2000));
+
     // 2. Mapeamento para a estrutura JSON da API
     const ordensMapeadas = mapTextToJSON(rawText);
 
