@@ -380,8 +380,8 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index) {
   observacaoConsolidada = cleanText(observacaoConsolidada);
   
   return {
-    codigoInternoMontador: montadorGeral,
-    dataAgendamento: dataAgendamentoISO,
+    codigoInternoMontador: "",
+    dataAgendamento: "",
     itens: [
       {
         dataPrevisaoEntrega: formattedDate,

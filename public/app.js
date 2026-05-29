@@ -45,7 +45,7 @@ const apiMethodSelect = document.getElementById('api-method');
 const apiKeyInput = document.getElementById('api-key');
 const apiSecretInput = document.getElementById('api-secret');
 const btnPublishAll = document.getElementById('btn-publish-all');
-const btnDownloadCsv = document.getElementById('btn-download-csv');
+const btnDownloadReport = document.getElementById('btn-download-report');
 
 const monitorConsole = document.getElementById('monitor-console');
 const consoleProgress = document.getElementById('console-progress');
@@ -98,6 +98,12 @@ btnRemoveFile.addEventListener('click', (e) => {
 function handleFile(file) {
   if (!file.name.toLowerCase().endsWith('.pdf')) {
     alert('Erro: Por favor, selecione apenas arquivos do formato PDF.');
+    return;
+  }
+
+  // Validação do limite de 4.5MB para Vercel Serverless
+  if (file.size > 4.5 * 1024 * 1024) {
+    alert('Erro: O arquivo excede o limite temporário de 4.5MB para processamento em nuvem.');
     return;
   }
 
@@ -451,7 +457,7 @@ btnPublishAll.addEventListener('click', async () => {
           url,
           method,
           headers,
-          data: ordem
+          data: [ordem]
         })
       });
 
@@ -485,14 +491,14 @@ btnPublishAll.addEventListener('click', async () => {
 
   log('success', `Processamento de lote finalizado! Sucessos: ${successCount} | Erros: ${errorCount}`);
   btnPublishAll.disabled = false;
-  btnDownloadCsv.style.display = 'inline-flex';
+  btnDownloadReport.style.display = 'inline-flex';
 });
 
-// Geração de CSV no Browser
-btnDownloadCsv.addEventListener('click', () => {
+// Geração de Relatório ZIP (CSV + JSON) no Browser
+btnDownloadReport.addEventListener('click', () => {
   if (sessionState.orders.length === 0) return;
 
-  log('info', 'Gerando arquivo CSV do relatório...');
+  log('info', 'Preparando pacote ZIP com CSV e JSON do relatório...');
 
   // Cabeçalho Excel brasileiro compatível (separador ponto e vírgula e acentuação UTF-8 com BOM)
   const headers = [
@@ -535,22 +541,39 @@ btnDownloadCsv.addEventListener('click', () => {
     csvContent += row.join(';') + '\n';
   });
 
-  // Salva arquivo local via Blob e Link Efêmero
-  // \uFEFF insere o byte order mark (BOM) UTF-8 para que o Excel abra acentuações perfeitamente
-  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  
+  // Adiciona BOM UTF-8 (\uFEFF) para garantir leitura de caracteres especiais no Excel
+  const csvBlobContent = '\uFEFF' + csvContent;
+
+  // JSON completo do que foi publicado na API
+  const jsonContent = JSON.stringify(sessionState.orders, null, 2);
+
+  // Inicializa o JSZip para compactar os dois arquivos
+  const zip = new JSZip();
   const originalName = sessionState.filename.replace('.pdf', '') || 'relatorio';
-  link.setAttribute('href', url);
-  link.setAttribute('download', `Relatorio_Montagem_${originalName}_${new Date().toISOString().slice(0,10)}.csv`);
-  link.style.visibility = 'hidden';
-  
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  log('success', 'Relatório CSV exportado com sucesso para download.');
+
+  zip.file(`Relatorio_Montagem_${originalName}.csv`, csvBlobContent);
+  zip.file(`Dados_Publicados_API_${originalName}.json`, jsonContent);
+
+  // Gera o arquivo ZIP de forma assíncrona
+  zip.generateAsync({ type: 'blob' })
+    .then((content) => {
+      const url = URL.createObjectURL(content);
+      const link = document.createElement('a');
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Relatorio_Completo_${originalName}_${new Date().toISOString().slice(0, 10)}.zip`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      log('success', 'Relatório completo (.ZIP contendo CSV e JSON) exportado com sucesso!');
+    })
+    .catch((err) => {
+      log('error', `Erro ao gerar arquivo ZIP: ${err.message}`);
+      alert(`Erro ao compactar arquivos: ${err.message}`);
+    });
 });
 
 // --- AUXILIARES E POLIMENTO ---
@@ -574,7 +597,7 @@ function resetSession() {
   dropzone.style.display = 'flex';
   extractionAlert.style.display = 'none';
   monitorConsole.style.display = 'none';
-  btnDownloadCsv.style.display = 'none';
+  btnDownloadReport.style.display = 'none';
 
   // Desabilita passos à frente
   sectionDefaults.classList.add('disabled-step');

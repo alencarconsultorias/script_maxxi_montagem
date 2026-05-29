@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // Máximo 10MB
+  limits: { fileSize: 4.5 * 1024 * 1024 } // Limite Vercel: 4.5MB
 });
 
 /**
@@ -105,10 +105,14 @@ app.post('/api/publish', async (req, res) => {
   }
 });
 
-// Inicia o servidor local
-app.listen(PORT, () => {
-  console.log(`\n======================================================`);
-  console.log(`🚀 SERVIDOR MAXXI MONTAGEM INICIADO COM SUCESSO!`);
-  console.log(`   Acesse no navegador: http://localhost:${PORT}`);
-  console.log(`======================================================\n`);
-});
+// Inicia o servidor local apenas se executado diretamente
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n======================================================`);
+    console.log(`🚀 SERVIDOR MAXXI MONTAGEM INICIADO COM SUCESSO!`);
+    console.log(`   Acesse no navegador: http://localhost:${PORT}`);
+    console.log(`======================================================\n`);
+  });
+}
+
+module.exports = app;
