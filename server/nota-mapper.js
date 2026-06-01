@@ -423,6 +423,13 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index) {
     bairro = foundBairro || 'CENTRO';
   }
 
+  // Produto com "ESTOF" → valor fixo de R$25
+  let estofOverride = false;
+  if (/ESTOF/i.test(descProduto)) {
+    valorMontagem = 25;
+    estofOverride = true;
+  }
+
   // Número da residência
   let numero = 'S/N';
   const numeroMatch = endereco.match(/(?:Nº|NUMERO|N[0º])\s*(\d+|[A-Z0-9\s-]+)/i);
@@ -470,7 +477,8 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index) {
         qtdHorasMontagem: 0,
         quantidade: 1,
         valorMontagem: valorMontagem,
-        valorUnitario: valorUnitario
+        valorUnitario: valorUnitario,
+        estofOverride: estofOverride
       }
     ],
     nroOrdemMontagem: nroOrdemMontagem,

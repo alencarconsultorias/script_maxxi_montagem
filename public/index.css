@@ -526,6 +526,12 @@ body {
   color: var(--brand-blue);
 }
 
+.badge-estof-counter {
+  background: rgba(229, 149, 0, 0.1);
+  border-color: rgba(229, 149, 0, 0.35);
+  color: #b37600;
+}
+
 .table-container {
   overflow-x: auto;
   border-radius: var(--border-radius-md);
@@ -591,6 +597,35 @@ body {
 .status-badge.success { background: rgba(15, 186, 106, 0.08); color: #0a8a50; border: 1px solid rgba(15, 186, 106, 0.2); }
 .status-badge.warning { background: rgba(229, 149, 0, 0.08); color: #b37600; border: 1px solid rgba(229, 149, 0, 0.2); }
 .status-badge.error { background: rgba(227, 38, 58, 0.08); color: var(--brand-red-dark); border: 1px solid rgba(227, 38, 58, 0.18); }
+
+/* Destaque ESTOF — valor fixo R$25 */
+.valor-estof-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: #92560a;
+}
+
+.estof-label {
+  background: rgba(229, 149, 0, 0.12);
+  color: #b37600;
+  border: 1px solid rgba(229, 149, 0, 0.35);
+  border-radius: 50px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.input-estof-override {
+  border-color: rgba(229, 149, 0, 0.5) !important;
+  background: rgba(229, 149, 0, 0.05) !important;
+  color: #92560a !important;
+  font-weight: 600 !important;
+}
 
 /* =============================================
    EXPANSIBLE EDITOR AREA
