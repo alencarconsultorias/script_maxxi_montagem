@@ -138,16 +138,16 @@ function mapTextToJSON(rawText) {
 
   const montadorGeral = extractMontador(rawText);
 
-  const rowStartRegex = /MONTAGEM\s*-\s*(\d{2}\/\d{2}\/\d{4})/gi;
+  const rowStartRegex = /(MONTAGEM|REVIS[ÃA]O)\s*-\s*(\d{2}\/\d{2}\/\d{4})/gi;
   const matches = [];
   let match;
 
   while ((match = rowStartRegex.exec(rawText)) !== null) {
-    matches.push({ date: match[1], index: match.index });
+    matches.push({ date: match[2], index: match.index, isRevisao: /REVIS/i.test(match[1]) });
   }
 
   if (matches.length === 0) {
-    console.warn("Nenhuma ordem de montagem (MONTAGEM - DD/MM/YYYY) foi encontrada no texto.");
+    console.warn("Nenhuma ordem de montagem (MONTAGEM/REVISÃO - DD/MM/YYYY) foi encontrada no texto.");
     return [];
   }
 
@@ -158,7 +158,7 @@ function mapTextToJSON(rawText) {
     const blockText = rawText.slice(startIndex, endIndex);
 
     try {
-      const ordem = parseBlock(blockText, montadorGeral, currentMatch.date, i + 1);
+      const ordem = parseBlock(blockText, montadorGeral, currentMatch.date, i + 1, currentMatch.isRevisao);
       if (ordem) {
         rawOrdens.push(ordem);
       }
@@ -201,9 +201,9 @@ function mapTextToJSON(rawText) {
  * O unpdf extrai o texto do PDF mantendo a ordem visual: produto → cliente → endereço → BASE/COMIS.
  * A estratégia principal busca cliente e endereço na área pré-BASE; o fallback usa a área pós-COMIS.
  */
-function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index) {
+function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, isRevisao = false) {
   // 1. Cabeçalho: data, filial, pedido
-  const headerRegex = /MONTAGEM\s*-\s*(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+(\d+)/i;
+  const headerRegex = /(MONTAGEM|REVIS[ÃA]O)\s*-\s*(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+(\d+)/i;
   const headerMatch = blockText.match(headerRegex);
 
   let dateStr = dataAgendamentoOriginal;
@@ -211,9 +211,9 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index) {
   let nroPedido = 0;
 
   if (headerMatch) {
-    dateStr = headerMatch[1];
-    nroFilial = parseInt(headerMatch[2], 10);
-    nroPedido = parseInt(headerMatch[3], 10);
+    dateStr = headerMatch[2];
+    nroFilial = parseInt(headerMatch[3], 10);
+    nroPedido = parseInt(headerMatch[4], 10);
   } else {
     const numbers = blockText.match(/\b\d{5,10}\b/g);
     if (numbers && numbers.length > 0) {
@@ -430,6 +430,13 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index) {
     estofOverride = true;
   }
 
+  // Dt. Agendamento "REVISÃO" → valor fixo de R$20
+  let revisaoOverride = false;
+  if (isRevisao) {
+    valorMontagem = 20;
+    revisaoOverride = true;
+  }
+
   // Número da residência
   let numero = 'S/N';
   const numeroMatch = endereco.match(/(?:Nº|NUMERO|N[0º])\s*(\d+|[A-Z0-9\s-]+)/i);
@@ -478,7 +485,8 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index) {
         quantidade: 1,
         valorMontagem: valorMontagem,
         valorUnitario: valorUnitario,
-        estofOverride: estofOverride
+        estofOverride: estofOverride,
+        revisaoOverride: revisaoOverride
       }
     ],
     nroOrdemMontagem: nroOrdemMontagem,

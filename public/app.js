@@ -243,7 +243,9 @@ function renderTable() {
       <td><span title="${item.descProduto}">${truncate(item.descProduto, 22)}</span></td>
       <td>${item.estofOverride
         ? `<span class="valor-estof-tag">R$ ${item.valorMontagem.toFixed(2)} <span class="estof-label">ESTOF</span></span>`
-        : `R$ ${item.valorMontagem.toFixed(2)}`
+        : item.revisaoOverride
+          ? `<span class="valor-estof-tag">R$ ${item.valorMontagem.toFixed(2)} <span class="estof-label">REVISAO</span></span>`
+          : `R$ ${item.valorMontagem.toFixed(2)}`
       }</td>
       <td>${statusHtml}</td>
       <td><i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="row-arrow"></i></td>
@@ -339,8 +341,8 @@ function renderTable() {
                 <input type="number" step="0.01" id="edit-item-val-unit" value="${item.valorUnitario}">
               </div>
               <div class="form-group">
-                <label>Valor Montagem (Comissão)${item.estofOverride ? ' <span class="estof-label">R$25 fixo — ESTOF</span>' : ''}</label>
-                <input type="number" step="0.01" id="edit-item-val-mont" value="${item.valorMontagem}" ${item.estofOverride ? 'class="input-estof-override"' : ''}>
+                <label>Valor Montagem (Comissão)${item.estofOverride ? ' <span class="estof-label">R$25 fixo — ESTOF</span>' : item.revisaoOverride ? ' <span class="estof-label">R$20 fixo — REVISAO</span>' : ''}</label>
+                <input type="number" step="0.01" id="edit-item-val-mont" value="${item.valorMontagem}" ${item.estofOverride || item.revisaoOverride ? 'class="input-estof-override"' : ''}>
               </div>
               <div class="form-group">
                 <label>Quantidade</label>
