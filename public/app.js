@@ -32,6 +32,7 @@ const defClassif = document.getElementById('def-classif');
 const defCep = document.getElementById('def-cep');
 const defTipoOrdem = document.getElementById('def-tipo-ordem');
 const defProdCod = document.getElementById('def-prod-cod');
+const defDataPrevisao = document.getElementById('def-data-previsao');
 const btnApplyDefaults = document.getElementById('btn-apply-defaults');
 
 // Tabela
@@ -165,6 +166,7 @@ btnApplyDefaults.addEventListener('click', () => {
   const cep = defCep.value.trim() || '65000000';
   const tipoOrdem = parseInt(defTipoOrdem.value, 10) || 1;
   const prodCod = defProdCod.value.trim() || '2026';
+  const dataPrevisao = defDataPrevisao.value; // YYYY-MM-DD, vazio = não sobrescreve
 
   sessionState.orders.forEach(ordem => {
     // Atualiza na OS
@@ -172,10 +174,17 @@ btnApplyDefaults.addEventListener('click', () => {
     ordem.ordemServico.codigoInternoClassificacaoCliente = classif;
     ordem.ordemServico.cep = cep;
     ordem.ordemServico.tipoOrdemMontagem = tipoOrdem;
+    if (dataPrevisao) {
+      ordem.ordemServico.dataPrevisaoMontagem = dataPrevisao;
+    }
 
     // Atualiza nos Itens
     ordem.itens.forEach(item => {
       item.nroProduto = prodCod;
+      if (dataPrevisao) {
+        item.dataPrevisaoMontagem = dataPrevisao;
+        item.dataPrevisaoEntrega = dataPrevisao;
+      }
     });
   });
 
