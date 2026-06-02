@@ -61,6 +61,16 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 - Default `cep`: `"65000000"` — should be overridden via frontend defaults.
 - `codigoInternoClassificacaoCliente` is always `"ML"`.
 
+**`valorMontagem` override rules (applied in order, last wins):**
+1. Product description matches `/ESTOF/i` → `valorMontagem = 25` (R$25).
+2. Product description matches `CJ MESA ALAMO ROSE 4C TEC 80X120 IMBUIA/OFF` exactly → `valorMontagem = 25`.
+3. Date type is `REVISÃO` (block opened by `REVISÃO - DD/MM/YYYY`) → `valorMontagem = 20` (R$20). This overrides rules 1 and 2.
+
+**`ADDR_PREFIX_RE` — address line detection:**
+- `CJ` is intentionally **not** in the prefix list. "CJ" appears in product names (e.g., "CJ MESA ALAMO...") and would cause misclassification if treated as "CONJUNTO" address prefix.
+
+**Fields `dataPrevisaoEntrega` and `dataPrevisaoMontagem`** in each item are both set to the order's scheduling date (`formattedDate`). The frontend step 2 exposes a `DataPrevisao` global default that can override these for the entire batch.
+
 **API JSON contract:** see `docs/struct_api_controlmob.json` for the full field schema sent to Control Mob.
 
 ## Deploy
