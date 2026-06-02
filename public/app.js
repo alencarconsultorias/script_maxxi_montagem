@@ -41,6 +41,8 @@ const badgeCounterContainer = document.getElementById('badge-counter-container')
 const badgeTotal = document.getElementById('badge-total');
 const badgeEstofContainer = document.getElementById('badge-estof-container');
 const badgeEstofCount = document.getElementById('badge-estof-count');
+const badgeRevisaoContainer = document.getElementById('badge-revisao-container');
+const badgeRevisaoCount = document.getElementById('badge-revisao-count');
 
 // Envio & Console
 const apiUrlInput = document.getElementById('api-url');
@@ -212,15 +214,21 @@ function renderTable() {
   badgeTotal.textContent = sessionState.orders.length;
   badgeCounterContainer.style.display = 'block';
 
-  const estofCount = sessionState.orders.filter(o => o.itens[0]?.estofOverride).length;
+  const estofCount = sessionState.orders.filter(o => o.itens.some(it => it.estofOverride)).length;
   badgeEstofCount.textContent = estofCount;
   badgeEstofContainer.style.display = estofCount > 0 ? 'block' : 'none';
+
+  const revisaoCount = sessionState.orders.filter(o => o.itens.some(it => it.revisaoOverride)).length;
+  badgeRevisaoCount.textContent = revisaoCount;
+  badgeRevisaoContainer.style.display = revisaoCount > 0 ? 'block' : 'none';
 
   sessionState.orders.forEach((ordem, index) => {
     const isExpanded = sessionState.activeEditorIndex === index;
     const client = ordem.ordemServico;
     const item = ordem.itens[0] || {};
-    
+    const allProdsTitle = ordem.itens.map(it => it.descProduto).join(' | ').replace(/"/g, '&quot;');
+    const itemCountBadge = ordem.itens.length > 1 ? `<span class="badge-items-count">+${ordem.itens.length - 1}</span>` : '';
+
     // Status visual de envio
     let statusHtml = `<span class="status-badge pending">Pendente</span>`;
     if (ordem.syncStatus === 'success') {
@@ -232,19 +240,20 @@ function renderTable() {
     }
 
     // Linha Principal
+    const rowTypeClass = item.estofOverride ? 'row-estof' : item.revisaoOverride ? 'row-revisao' : '';
     const tr = document.createElement('tr');
-    tr.className = `main-row ${isExpanded ? 'active' : ''}`;
+    tr.className = `main-row ${isExpanded ? 'active' : ''} ${rowTypeClass}`.trim();
     tr.dataset.index = index;
     tr.innerHTML = `
       <td><strong>${index + 1}</strong></td>
       <td><code>${client.nroPedido}</code></td>
       <td><strong>${client.nomeCliente}</strong></td>
       <td>${client.nroFilial}</td>
-      <td><span title="${item.descProduto}">${truncate(item.descProduto, 22)}</span></td>
+      <td><span title="${allProdsTitle}">${truncate(item.descProduto, 22)} ${itemCountBadge}</span></td>
       <td>${item.estofOverride
         ? `<span class="valor-estof-tag">R$ ${item.valorMontagem.toFixed(2)} <span class="estof-label">ESTOF</span></span>`
         : item.revisaoOverride
-          ? `<span class="valor-estof-tag">R$ ${item.valorMontagem.toFixed(2)} <span class="estof-label">REVISAO</span></span>`
+          ? `<span class="valor-revisao-tag">R$ ${item.valorMontagem.toFixed(2)} <span class="revisao-label">REVISÃO</span></span>`
           : `R$ ${item.valorMontagem.toFixed(2)}`
       }</td>
       <td>${statusHtml}</td>
@@ -258,6 +267,31 @@ function renderTable() {
     if (isExpanded) {
       const trEditor = document.createElement('tr');
       trEditor.className = 'details-row';
+      const itemCardsHtml = ordem.itens.map((itm, itemIdx) => `
+        <div class="item-card${ordem.itens.length > 1 ? ' multi' : ''}">
+          ${ordem.itens.length > 1 ? `<div class="item-card-header">Produto ${itemIdx + 1} de ${ordem.itens.length}</div>` : ''}
+          <div class="form-group span-2">
+            <label>Descrição do Produto</label>
+            <input type="text" id="edit-item-desc-${itemIdx}" value="${itm.descProduto.replace(/"/g, '&quot;')}">
+          </div>
+          <div class="form-group">
+            <label>Valor Montagem (Comissão)${itm.estofOverride ? ' <span class="estof-label">R$25 — ESTOF</span>' : itm.revisaoOverride ? ' <span class="revisao-label">R$20 — REVISÃO</span>' : ''}</label>
+            <input type="number" step="0.01" id="edit-item-val-mont-${itemIdx}" value="${itm.valorMontagem}" ${itm.estofOverride ? 'class="input-estof-override"' : itm.revisaoOverride ? 'class="input-revisao-override"' : ''}>
+          </div>
+          <div class="form-group">
+            <label>Valor Unitário (Base)</label>
+            <input type="number" step="0.01" id="edit-item-val-unit-${itemIdx}" value="${itm.valorUnitario}">
+          </div>
+          <div class="form-group">
+            <label>Quantidade</label>
+            <input type="number" id="edit-item-qtd-${itemIdx}" value="${itm.quantidade}">
+          </div>
+          <div class="form-group">
+            <label>Data Prev. Montagem</label>
+            <input type="date" id="edit-item-prev-${itemIdx}" value="${itm.dataPrevisaoMontagem}">
+          </div>
+        </div>
+      `).join('');
       trEditor.innerHTML = `
         <td colspan="8">
           <div class="editor-wrapper">
@@ -316,10 +350,6 @@ function renderTable() {
 
             <!-- ABA ITEM -->
             <div class="editor-pane ${sessionState.activeTab === 'item' ? 'active' : ''}">
-              <div class="form-group span-2">
-                <label>Descrição do Produto</label>
-                <input type="text" id="edit-item-desc" value="${item.descProduto}">
-              </div>
               <div class="form-group">
                 <label>Código Produto (Essencial)</label>
                 <input type="text" id="edit-item-cod" value="${item.nroProduto}">
@@ -333,25 +363,10 @@ function renderTable() {
                 <input type="number" id="edit-item-filial" value="${item.nroFilial}">
               </div>
               <div class="form-group">
-                <label>Data Prev. Montagem</label>
-                <input type="date" id="edit-item-prev" value="${item.dataPrevisaoMontagem}">
-              </div>
-              <div class="form-group">
-                <label>Valor Unitário (Base)</label>
-                <input type="number" step="0.01" id="edit-item-val-unit" value="${item.valorUnitario}">
-              </div>
-              <div class="form-group">
-                <label>Valor Montagem (Comissão)${item.estofOverride ? ' <span class="estof-label">R$25 fixo — ESTOF</span>' : item.revisaoOverride ? ' <span class="estof-label">R$20 fixo — REVISAO</span>' : ''}</label>
-                <input type="number" step="0.01" id="edit-item-val-mont" value="${item.valorMontagem}" ${item.estofOverride || item.revisaoOverride ? 'class="input-estof-override"' : ''}>
-              </div>
-              <div class="form-group">
-                <label>Quantidade</label>
-                <input type="number" id="edit-item-qtd" value="${item.quantidade}">
-              </div>
-              <div class="form-group">
                 <label>ID Empresa</label>
                 <input type="number" id="edit-item-empresa" value="${client.idEmpresa}">
               </div>
+              ${itemCardsHtml}
             </div>
 
             <div class="form-actions-inline">
@@ -392,11 +407,10 @@ window.switchTab = function(tabName) {
 window.saveActiveOrder = function(index) {
   const ordem = sessionState.orders[index];
   const client = ordem.ordemServico;
-  const item = ordem.itens[0];
 
   // Coleta dados da Aba Cliente
   client.nomeCliente = document.getElementById('edit-client-nome').value.trim();
-  client.cpf = document.getElementById('edit-client-cpf').value.trim().replace(/\D/g, ''); // Apenas números
+  client.cpf = document.getElementById('edit-client-cpf').value.trim().replace(/\D/g, '');
   client.cep = document.getElementById('edit-client-cep').value.trim().replace(/\D/g, '');
   client.nroTelefone = document.getElementById('edit-client-fone').value.trim();
   client.endereco = document.getElementById('edit-client-end').value.trim();
@@ -407,25 +421,31 @@ window.saveActiveOrder = function(index) {
   client.observacao = document.getElementById('edit-client-obs').value.trim();
   client.observacaoPedido = client.observacao;
 
-  // Coleta dados da Aba Item
-  item.descProduto = document.getElementById('edit-item-desc').value.trim();
-  item.nroProduto = document.getElementById('edit-item-cod').value.trim();
-  item.nroPedido = parseInt(document.getElementById('edit-item-pedido').value, 10) || 0;
-  item.nroFilial = parseInt(document.getElementById('edit-item-filial').value, 10) || 0;
-  item.dataPrevisaoMontagem = document.getElementById('edit-item-prev').value;
-  item.dataPrevisaoEntrega = item.dataPrevisaoMontagem; // sincroniza previsões
-  client.dataPrevisaoMontagem = item.dataPrevisaoMontagem;
-  
-  item.valorUnitario = parseFloat(document.getElementById('edit-item-val-unit').value) || 0.0;
-  item.valorMontagem = parseFloat(document.getElementById('edit-item-val-mont').value) || 0.0;
-  item.quantidade = parseInt(document.getElementById('edit-item-qtd').value, 10) || 1;
-  
-  client.idEmpresa = parseInt(document.getElementById('edit-item-empresa').value, 10) || 0;
+  // Coleta dados da Aba Item — campos compartilhados
+  const nroProduto = document.getElementById('edit-item-cod').value.trim();
+  const nroPedido = parseInt(document.getElementById('edit-item-pedido').value, 10) || 0;
+  const nroFilial = parseInt(document.getElementById('edit-item-filial').value, 10) || 0;
+  const idEmpresa = parseInt(document.getElementById('edit-item-empresa').value, 10) || 0;
+
+  // Coleta dados por item
+  ordem.itens.forEach((itm, itemIdx) => {
+    itm.descProduto = document.getElementById(`edit-item-desc-${itemIdx}`).value.trim();
+    itm.valorMontagem = parseFloat(document.getElementById(`edit-item-val-mont-${itemIdx}`).value) || 0.0;
+    itm.valorUnitario = parseFloat(document.getElementById(`edit-item-val-unit-${itemIdx}`).value) || 0.0;
+    itm.quantidade = parseInt(document.getElementById(`edit-item-qtd-${itemIdx}`).value, 10) || 1;
+    itm.dataPrevisaoMontagem = document.getElementById(`edit-item-prev-${itemIdx}`).value;
+    itm.dataPrevisaoEntrega = itm.dataPrevisaoMontagem;
+    itm.nroProduto = nroProduto;
+    itm.nroPedido = nroPedido;
+    itm.nroFilial = nroFilial;
+  });
 
   // Sincroniza dados cruzados
-  client.nroPedido = item.nroPedido;
-  client.nroFilial = item.nroFilial;
-  ordem.totalItensMontagem = item.quantidade;
+  client.idEmpresa = idEmpresa;
+  client.nroPedido = nroPedido;
+  client.nroFilial = nroFilial;
+  client.dataPrevisaoMontagem = ordem.itens[0].dataPrevisaoMontagem;
+  ordem.totalItensMontagem = ordem.itens.reduce((sum, itm) => sum + itm.quantidade, 0);
 
   // Fecha editor e re-renderiza
   sessionState.activeEditorIndex = null;

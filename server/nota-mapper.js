@@ -268,7 +268,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, is
 
   // 6. Extração de produto, cliente e endereço
   // Prefixos de logradouros brasileiros (lista expandida — inclui PASSAGEM, comum em São Luís/MA)
-  const ADDR_PREFIX_RE = /^(RUA|R\.|AV|AVENIDA|TRAVESSA|TV|ESTRADA|ES|PASSAGEM|PAS|QUADRA|QD|CONJUNTO|CONJ|CJ|SETOR|SET|LOTEAMENTO|LOT|CONDOMINIO|COND|BLOCO|BL|SITIO|ALAMEDA|AL|PRACA|PC|RODOVIA|ROD|LARGO|LG|VILA|VL)\b/i;
+  const ADDR_PREFIX_RE = /^(RUA|R\.|AV|AVENIDA|TRAVESSA|TV|ESTRADA|ES|PASSAGEM|PAS|QUADRA|QD|CONJUNTO|CONJ|SETOR|SET|LOTEAMENTO|LOT|CONDOMINIO|COND|BLOCO|BL|SITIO|ALAMEDA|AL|PRACA|PC|RODOVIA|ROD|LARGO|LG|VILA|VL)\b/i;
 
   let descProduto = 'PRODUTO NÃO IDENTIFICADO';
   let nomeCliente = 'CLIENTE NÃO IDENTIFICADO';
@@ -428,6 +428,11 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, is
   if (/ESTOF/i.test(descProduto)) {
     valorMontagem = 25;
     estofOverride = true;
+  }
+
+  // Produto "CJ MESA ALAMO ROSE 4C TEC 80X120 IMBUIA/OFF" → valor fixo de R$25
+  if (/CJ\s+MESA\s+ALAMO\s+ROSE\s+4C\s+TEC\s+80X120\s+IMBUIA\/OFF/i.test(descProduto)) {
+    valorMontagem = 25;
   }
 
   // Dt. Agendamento "REVISÃO" → valor fixo de R$20
