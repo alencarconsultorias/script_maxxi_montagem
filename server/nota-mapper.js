@@ -138,16 +138,20 @@ function mapTextToJSON(rawText) {
 
   const montadorGeral = extractMontador(rawText);
 
-  const rowStartRegex = /(MONTAGEM|REVIS[ÃA]O)\s*-\s*(\d{2}\/\d{2}\/\d{4})/gi;
+  const rowStartRegex = /(DESMONTAGEM|MONTAGEM|REVIS[ÃA]O)\s*-\s*(\d{2}\/\d{2}\/\d{4})/gi;
   const matches = [];
   let match;
 
   while ((match = rowStartRegex.exec(rawText)) !== null) {
-    matches.push({ date: match[2], index: match.index, isRevisao: /REVIS/i.test(match[1]) });
+    let ordemTipo;
+    if (/DESMONTAGEM/i.test(match[1])) ordemTipo = 'DESMONTAGEM';
+    else if (/REVIS/i.test(match[1])) ordemTipo = 'REVISAO';
+    else ordemTipo = 'MONTAGEM';
+    matches.push({ date: match[2], index: match.index, ordemTipo });
   }
 
   if (matches.length === 0) {
-    console.warn("Nenhuma ordem de montagem (MONTAGEM/REVISÃO - DD/MM/YYYY) foi encontrada no texto.");
+    console.warn("Nenhuma ordem de montagem (MONTAGEM/DESMONTAGEM/REVISÃO - DD/MM/YYYY) foi encontrada no texto.");
     return [];
   }
 
@@ -158,7 +162,7 @@ function mapTextToJSON(rawText) {
     const blockText = rawText.slice(startIndex, endIndex);
 
     try {
-      const ordem = parseBlock(blockText, montadorGeral, currentMatch.date, i + 1, currentMatch.isRevisao);
+      const ordem = parseBlock(blockText, montadorGeral, currentMatch.date, i + 1, currentMatch.ordemTipo);
       if (ordem) {
         rawOrdens.push(ordem);
       }
@@ -201,9 +205,9 @@ function mapTextToJSON(rawText) {
  * O unpdf extrai o texto do PDF mantendo a ordem visual: produto → cliente → endereço → BASE/COMIS.
  * A estratégia principal busca cliente e endereço na área pré-BASE; o fallback usa a área pós-COMIS.
  */
-function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, isRevisao = false) {
+function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, ordemTipo = 'MONTAGEM') {
   // 1. Cabeçalho: data, filial, pedido
-  const headerRegex = /(MONTAGEM|REVIS[ÃA]O)\s*-\s*(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+(\d+)/i;
+  const headerRegex = /(DESMONTAGEM|MONTAGEM|REVIS[ÃA]O)\s*-\s*(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+(\d+)/i;
   const headerMatch = blockText.match(headerRegex);
 
   let dateStr = dataAgendamentoOriginal;
@@ -436,11 +440,18 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, is
   }
 
   // Dt. Agendamento "REVISÃO" → valor fixo de R$20
+  const isRevisao = ordemTipo === 'REVISAO';
   let revisaoOverride = false;
   if (isRevisao) {
     valorMontagem = 20;
     revisaoOverride = true;
   }
+
+  // tipoOrdemMontagem: MONTAGEM=124, DESMONTAGEM=125, REVISÃO=1
+  let tipoOrdemMontagem;
+  if (ordemTipo === 'DESMONTAGEM') tipoOrdemMontagem = 125;
+  else if (ordemTipo === 'MONTAGEM') tipoOrdemMontagem = 124;
+  else tipoOrdemMontagem = 1;
 
   // Número da residência
   let numero = 'S/N';
@@ -491,7 +502,8 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, is
         valorMontagem: valorMontagem,
         valorUnitario: valorUnitario,
         estofOverride: estofOverride,
-        revisaoOverride: revisaoOverride
+        revisaoOverride: revisaoOverride,
+        ordemTipo: ordemTipo
       }
     ],
     nroOrdemMontagem: nroOrdemMontagem,
@@ -518,7 +530,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, is
       observacao: observacaoConsolidada,
       observacaoPedido: observacaoConsolidada,
       siglaFilial: "",
-      tipoOrdemMontagem: 1,
+      tipoOrdemMontagem: tipoOrdemMontagem,
       uf: uf
     },
     totalItensMontagem: 1

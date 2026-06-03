@@ -538,6 +538,12 @@ body {
   color: #6d28d9;
 }
 
+.badge-desmontagem-counter {
+  background: rgba(227, 38, 58, 0.08);
+  border-color: rgba(227, 38, 58, 0.3);
+  color: #b91c2e;
+}
+
 .table-container {
   overflow-x: auto;
   border-radius: var(--border-radius-md);
@@ -678,6 +684,46 @@ body {
 .orders-table tbody tr.main-row.row-revisao:hover,
 .orders-table tbody tr.main-row.row-revisao.active {
   background: rgba(130, 71, 229, 0.09);
+}
+
+.orders-table tbody tr.main-row.row-desmontagem {
+  background: rgba(227, 38, 58, 0.04);
+}
+
+.orders-table tbody tr.main-row.row-desmontagem:hover,
+.orders-table tbody tr.main-row.row-desmontagem.active {
+  background: rgba(227, 38, 58, 0.09);
+}
+
+/* Tipo tags inline na tabela */
+.tipo-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 50px;
+  padding: 3px 9px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.tipo-montagem {
+  background: rgba(38, 114, 181, 0.1);
+  color: var(--brand-blue);
+  border: 1px solid rgba(38, 114, 181, 0.28);
+}
+
+.tipo-desmontagem {
+  background: rgba(227, 38, 58, 0.1);
+  color: #b91c2e;
+  border: 1px solid rgba(227, 38, 58, 0.3);
+}
+
+.tipo-revisao {
+  background: rgba(130, 71, 229, 0.1);
+  color: #6d28d9;
+  border: 1px solid rgba(130, 71, 229, 0.3);
 }
 
 .badge-items-count {

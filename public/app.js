@@ -43,6 +43,8 @@ const badgeEstofContainer = document.getElementById('badge-estof-container');
 const badgeEstofCount = document.getElementById('badge-estof-count');
 const badgeRevisaoContainer = document.getElementById('badge-revisao-container');
 const badgeRevisaoCount = document.getElementById('badge-revisao-count');
+const badgeDesmontagemContainer = document.getElementById('badge-desmontagem-container');
+const badgeDesmontagemCount = document.getElementById('badge-desmontagem-count');
 
 // Envio & Console
 const apiUrlInput = document.getElementById('api-url');
@@ -168,7 +170,6 @@ btnApplyDefaults.addEventListener('click', () => {
   const idEmpresa = parseInt(defIdEmpresa.value, 10) || 0;
   const classif = defClassif.value.trim() || 'ML';
   const cep = defCep.value.trim() || '65000000';
-  const tipoOrdem = parseInt(defTipoOrdem.value, 10) || 1;
   const prodCod = defProdCod.value.trim() || '2026';
   const dataPrevisao = defDataPrevisao.value; // YYYY-MM-DD, vazio = não sobrescreve
 
@@ -177,7 +178,7 @@ btnApplyDefaults.addEventListener('click', () => {
     ordem.ordemServico.idEmpresa = idEmpresa;
     ordem.ordemServico.codigoInternoClassificacaoCliente = classif;
     ordem.ordemServico.cep = cep;
-    ordem.ordemServico.tipoOrdemMontagem = tipoOrdem;
+    // tipoOrdemMontagem é definido automaticamente pelo tipo detectado no PDF (MONTAGEM=124, DESMONTAGEM=125)
     if (dataPrevisao) {
       ordem.ordemServico.dataPrevisaoMontagem = dataPrevisao;
     }
@@ -206,7 +207,7 @@ function renderTable() {
   ordersTbody.innerHTML = '';
   
   if (sessionState.orders.length === 0) {
-    ordersTbody.innerHTML = `<tr><td colspan="8" class="empty-table">Nenhum PDF carregado ainda. Aguardando arquivo...</td></tr>`;
+    ordersTbody.innerHTML = `<tr><td colspan="9" class="empty-table">Nenhum PDF carregado ainda. Aguardando arquivo...</td></tr>`;
     badgeCounterContainer.style.display = 'none';
     return;
   }
@@ -221,6 +222,10 @@ function renderTable() {
   const revisaoCount = sessionState.orders.filter(o => o.itens.some(it => it.revisaoOverride)).length;
   badgeRevisaoCount.textContent = revisaoCount;
   badgeRevisaoContainer.style.display = revisaoCount > 0 ? 'block' : 'none';
+
+  const desmontagemCount = sessionState.orders.filter(o => o.itens.some(it => it.ordemTipo === 'DESMONTAGEM')).length;
+  badgeDesmontagemCount.textContent = desmontagemCount;
+  badgeDesmontagemContainer.style.display = desmontagemCount > 0 ? 'block' : 'none';
 
   sessionState.orders.forEach((ordem, index) => {
     const isExpanded = sessionState.activeEditorIndex === index;
@@ -239,14 +244,29 @@ function renderTable() {
       statusHtml = `<span class="status-badge warning">Enviando...</span>`;
     }
 
+    // Tipo da ordem detectado no PDF
+    const ordemTipoVal = item.ordemTipo || 'MONTAGEM';
+    const tipoTagHtml = ordemTipoVal === 'DESMONTAGEM'
+      ? `<span class="tipo-tag tipo-desmontagem">DESMONTAGEM</span>`
+      : ordemTipoVal === 'REVISAO'
+        ? `<span class="tipo-tag tipo-revisao">REVISÃO</span>`
+        : `<span class="tipo-tag tipo-montagem">MONTAGEM</span>`;
+
     // Linha Principal
-    const rowTypeClass = item.estofOverride ? 'row-estof' : item.revisaoOverride ? 'row-revisao' : '';
+    const rowTypeClass = item.estofOverride
+      ? 'row-estof'
+      : item.revisaoOverride
+        ? 'row-revisao'
+        : ordemTipoVal === 'DESMONTAGEM'
+          ? 'row-desmontagem'
+          : '';
     const tr = document.createElement('tr');
     tr.className = `main-row ${isExpanded ? 'active' : ''} ${rowTypeClass}`.trim();
     tr.dataset.index = index;
     tr.innerHTML = `
       <td><strong>${index + 1}</strong></td>
       <td><code>${client.nroPedido}</code></td>
+      <td>${tipoTagHtml}</td>
       <td><strong>${client.nomeCliente}</strong></td>
       <td>${client.nroFilial}</td>
       <td><span title="${allProdsTitle}">${truncate(item.descProduto, 22)} ${itemCountBadge}</span></td>
@@ -293,7 +313,7 @@ function renderTable() {
         </div>
       `).join('');
       trEditor.innerHTML = `
-        <td colspan="8">
+        <td colspan="9">
           <div class="editor-wrapper">
             <div class="editor-tabs">
               <button class="tab-btn ${sessionState.activeTab === 'client' ? 'active' : ''}" onclick="switchTab('client')">
