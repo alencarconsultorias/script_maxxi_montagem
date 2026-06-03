@@ -89,3 +89,4 @@ Vercel serverless via `api/index.js`. The `unpdf` package uses dynamic `import()
 
 - Node.js CommonJS (`"type": "commonjs"` in package.json)
 - Express 5, multer 2 (memory storage), axios, unpdf, dotenv
+
