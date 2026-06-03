@@ -48,7 +48,7 @@ vercel.json      # Routes /api/* → api/index.js
 This is the most fragile file. Any change to the Liliani PDF layout can break it.
 
 **Parsing strategy in `parseBlock()`:**
-- Orders are split by the regex `MONTAGEM\s*-\s*(\d{2}\/\d{2}\/\d{4})` — each match is one order block.
+- Orders are split by the regex `(DESMONTAGEM|MONTAGEM|REVIS[ÃA]O)\s*-\s*(\d{2}\/\d{2}\/\d{4})` — each match is one order block. DESMONTAGEM must appear before MONTAGEM in the alternation to avoid a partial match.
 - Within a block, `unpdf` preserves visual order: product lines → client name → address lines → `BASE: <valor> COMIS: <valor>`.
 - **Primary path (pré-BASE):** Finds the first line matching `ADDR_PREFIX_RE` (RUA, AV, TRAVESSA, PASSAGEM, etc.). The line immediately before it is the client name; lines before that form the product description; lines from the address prefix onward form the address.
 - **Fallback (pós-COMIS):** Used when client or address was not found in the primary path.
@@ -65,6 +65,14 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 1. Product description matches `/ESTOF/i` → `valorMontagem = 25` (R$25).
 2. Product description matches `CJ MESA ALAMO ROSE 4C TEC 80X120 IMBUIA/OFF` exactly → `valorMontagem = 25`.
 3. Date type is `REVISÃO` (block opened by `REVISÃO - DD/MM/YYYY`) → `valorMontagem = 20` (R$20). This overrides rules 1 and 2.
+
+**`tipoOrdemMontagem` auto-detection (set per order, not overrideable globally):**
+- Block opened by `MONTAGEM - DD/MM/YYYY` → `tipoOrdemMontagem = 124`
+- Block opened by `DESMONTAGEM - DD/MM/YYYY` → `tipoOrdemMontagem = 125`
+- Block opened by `REVISÃO - DD/MM/YYYY` → `tipoOrdemMontagem = 1`
+- The regex `(DESMONTAGEM|MONTAGEM|REVIS[ÃA]O)` — DESMONTAGEM must come first to avoid partial match against MONTAGEM.
+- Each item carries `ordemTipo: 'MONTAGEM'|'DESMONTAGEM'|'REVISAO'` for frontend display.
+- The frontend global "Tipo Ordem Montagem" field is hidden; per-order type is always auto-detected.
 
 **`ADDR_PREFIX_RE` — address line detection:**
 - `CJ` is intentionally **not** in the prefix list. "CJ" appears in product names (e.g., "CJ MESA ALAMO...") and would cause misclassification if treated as "CONJUNTO" address prefix.
