@@ -128,6 +128,15 @@ function extractAddressParts(rawAddr) {
   return result;
 }
 
+const CITY_TEAM_MAP = {
+  'SAO LUIS': 107,
+  'TERESINA': 108,
+  'ZE DOCA': 125,
+  'SAO MATEUS': 154,
+  'BALSAS': 112,
+  'ARAGUAINA': 249,
+};
+
 /**
  * Mapeia o texto bruto do PDF para a estrutura JSON da API
  * @param {string} rawText Texto completo extraído do PDF
@@ -301,8 +310,8 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
       // Valida: se parece produto (abreviação "G.", dígitos, ou palavras demais), não é cliente
       // Nomes brasileiros completos podem ter até 7-8 palavras; threshold em 8 para cobrir esses casos
       const looksLikeProduct = /^[A-ZÀ-ÿ]\./i.test(candidateClient) ||
-                               /\d/.test(candidateClient) ||
-                               candidateClient.split(/\s+/).length > 8;
+        /\d/.test(candidateClient) ||
+        candidateClient.split(/\s+/).length > 8;
 
       if (!looksLikeProduct) {
         nomeCliente = candidateClient;
@@ -518,6 +527,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
       dataPrevisaoMontagem: formattedDate,
       endereco: endereco || "ENDEREÇO NÃO IDENTIFICADO",
       idEmpresa: 0,
+      idEquipe: CITY_TEAM_MAP[cidade.toUpperCase()] || null,
       nomeCliente: nomeCliente,
       nroDDD: nroDDD,
       nroFilial: nroFilial,
