@@ -79,6 +79,22 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 
 **Fields `dataPrevisaoEntrega` and `dataPrevisaoMontagem`** in each item are both set to the order's scheduling date (`formattedDate`). The frontend step 2 exposes a `DataPrevisao` global default that can override these for the entire batch.
 
+**`idEquipe` auto-assignment (city → team ID):**
+- Set on `ordemServico.idEquipe` automatically based on the parsed `cidade` field using `CITY_TEAM_MAP`.
+- If the city is not in the map, `idEquipe` is `null` (Control Mob will ignore or reject the field).
+- Current mappings:
+
+| City | idEquipe |
+|------|----------|
+| SAO LUIS | 107 |
+| TERESINA | 108 |
+| ZE DOCA | 125 |
+| SAO MATEUS | 154 |
+| BALSAS | 112 |
+| ARAGUAINA | 249 |
+
+- To add a new city/team, update `CITY_TEAM_MAP` in `nota-mapper.js` (line ~131). The key must be the normalized uppercase city name as it appears after address parsing.
+
 **API JSON contract:** see `docs/struct_api_controlmob.json` for the full field schema sent to Control Mob.
 
 ## Deploy
