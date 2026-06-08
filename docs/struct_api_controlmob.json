@@ -30,7 +30,6 @@
             "dataPrevisaoMontagem": "2026-05-27T22:23:12.196Z",
             "endereco": "string",
             "idEmpresa": 0,
-            "idEquipe": 123,
             "nomeCliente": "string",
             "nroDDD": "string",
             "nroFilial": 0,
@@ -44,7 +43,8 @@
             "observacaoPedido": "string",
             "siglaFilial": "string",
             "tipoOrdemMontagem": 0,
-            "uf": "string"
+            "uf": "string",
+            "idEquipe": 123
         },
         "totalItensMontagem": 0
     }
