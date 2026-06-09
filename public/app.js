@@ -552,16 +552,19 @@ btnPublishAll.addEventListener('click', async () => {
   log('success', `Processamento de lote finalizado! Sucessos: ${successCount} | Erros: ${errorCount}`);
   btnPublishAll.disabled = false;
   btnDownloadReport.style.display = 'inline-flex';
+
+  // Download automático após publicação
+  generateAndDownloadReport();
 });
 
 // Geração de Relatório ZIP (CSV + JSON) no Browser
-btnDownloadReport.addEventListener('click', () => {
+function generateAndDownloadReport() {
   if (sessionState.orders.length === 0) return;
 
   log('info', 'Preparando pacote ZIP com CSV e JSON do relatório...');
 
   // Cabeçalho Excel brasileiro compatível (separador ponto e vírgula e acentuação UTF-8 com BOM)
-  const headers = [
+  const csvHeaders = [
     'Sequencia',
     'Pedido',
     'Cliente',
@@ -596,7 +599,7 @@ btnDownloadReport.addEventListener('click', () => {
   });
 
   // Concatena com separador ; (Excel do Brasil exige ponto e vírgula)
-  let csvContent = headers.join(';') + '\n';
+  let csvContent = csvHeaders.join(';') + '\n';
   rows.forEach(row => {
     csvContent += row.join(';') + '\n';
   });
@@ -634,7 +637,9 @@ btnDownloadReport.addEventListener('click', () => {
       log('error', `Erro ao gerar arquivo ZIP: ${err.message}`);
       alert(`Erro ao compactar arquivos: ${err.message}`);
     });
-});
+}
+
+btnDownloadReport.addEventListener('click', generateAndDownloadReport);
 
 // --- AUXILIARES E POLIMENTO ---
 
