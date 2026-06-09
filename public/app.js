@@ -3,6 +3,18 @@
  * Processamento Stateless e In-Memory
  */
 
+const TEAM_MAP = {
+  107: 'SAO LUIS',
+  108: 'TERESINA',
+  125: 'ZE DOCA',
+  154: 'SAO MATEUS',
+  112: 'BALSAS',
+  249: 'ARAGUAINA',
+};
+const TEAM_OPTIONS = Object.entries(TEAM_MAP)
+  .map(([id, name]) => `<option value="${id}">${name} (${id})</option>`)
+  .join('');
+
 // Estado Geral da Sessão (Efêmero)
 let sessionState = {
   orders: [],
@@ -204,7 +216,7 @@ function renderTable() {
   ordersTbody.innerHTML = '';
   
   if (sessionState.orders.length === 0) {
-    ordersTbody.innerHTML = `<tr><td colspan="9" class="empty-table">Nenhum PDF carregado ainda. Aguardando arquivo...</td></tr>`;
+    ordersTbody.innerHTML = `<tr><td colspan="10" class="empty-table">Nenhum PDF carregado ainda. Aguardando arquivo...</td></tr>`;
     badgeCounterContainer.style.display = 'none';
     return;
   }
@@ -273,6 +285,7 @@ function renderTable() {
           ? `<span class="valor-revisao-tag">R$ ${item.valorMontagem.toFixed(2)} <span class="revisao-label">REVISÃO</span></span>`
           : `R$ ${item.valorMontagem.toFixed(2)}`
       }</td>
+      <td>${client.idEquipe != null ? `<span title="ID ${client.idEquipe}">${TEAM_MAP[client.idEquipe] ?? client.idEquipe}</span>` : '<span class="muted">—</span>'}</td>
       <td>${statusHtml}</td>
       <td><i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="row-arrow"></i></td>
     `;
@@ -310,7 +323,7 @@ function renderTable() {
         </div>
       `).join('');
       trEditor.innerHTML = `
-        <td colspan="9">
+        <td colspan="10">
           <div class="editor-wrapper">
             <div class="editor-tabs">
               <button class="tab-btn ${sessionState.activeTab === 'client' ? 'active' : ''}" onclick="switchTab('client')">
@@ -358,6 +371,13 @@ function renderTable() {
               <div class="form-group">
                 <label>UF</label>
                 <input type="text" id="edit-client-uf" value="${client.uf}" maxlength="2">
+              </div>
+              <div class="form-group">
+                <label>Equipe</label>
+                <select id="edit-client-equipe">
+                  <option value="">-- Não definido --</option>
+                  ${TEAM_OPTIONS.replace(`value="${client.idEquipe}"`, `value="${client.idEquipe}" selected`)}
+                </select>
               </div>
               <div class="form-group span-2">
                 <label>Observações Consolidadas</label>
@@ -437,6 +457,8 @@ window.saveActiveOrder = function(index) {
   client.uf = document.getElementById('edit-client-uf').value.trim().toUpperCase();
   client.observacao = document.getElementById('edit-client-obs').value.trim();
   client.observacaoPedido = client.observacao;
+  const equipeVal = document.getElementById('edit-client-equipe').value;
+  client.idEquipe = equipeVal !== '' ? parseInt(equipeVal, 10) : null;
 
   // Coleta dados da Aba Item — campos compartilhados
   const nroProduto = document.getElementById('edit-item-cod').value.trim();
