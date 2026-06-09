@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Web tool that reads tabular PDF orders from **Magazine Liliani** (sent by client Maxxi Montagem), parses each order's fields (client, address, product, values, phone), and batch-publishes them to the **Control Mob REST API** (`controlmobile.net`). Stateless — nothing is written to disk.
 
-User flow: upload PDF → configure global defaults → review/edit each order → enter API credentials → publish with progress monitor.
+User flow: upload PDF → configure global defaults → review/edit each order → enter API credentials → publish with progress monitor → download ZIP report.
 
 ## Running locally
 
@@ -16,6 +16,10 @@ node server/index.js
 ```
 
 No build step. No test suite. The app module is exported from `server/index.js` and re-exported from `api/index.js` for Vercel serverless.
+
+## Version
+
+Current version: **1.1.9** — tracked in `package.json`, `package-lock.json`, and the footer of `public/index.html`.
 
 ## Environment variables (`.env`)
 
@@ -29,6 +33,9 @@ No build step. No test suite. The app module is exported from `server/index.js` 
 
 ```
 public/          # Vanilla JS/CSS/HTML frontend (no framework, no bundler)
+  app.js         # All frontend logic: session state, editor, publish flow, ZIP report
+  index.css      # Styles
+  index.html     # Shell — loads app.js, JSZip (CDN), Lucide icons (CDN)
 server/
   index.js       # Express 5 server — POST /api/upload and POST /api/publish
   pdf-parser.js  # Wraps unpdf (dynamic import) to extract raw text from PDF buffer
@@ -42,6 +49,35 @@ vercel.json      # Routes /api/* → api/index.js
 1. `POST /api/upload` receives a PDF buffer (multer, memory-only), calls `extractTextFromPDF` → `mapTextToJSON`, returns array of order objects.
 2. Frontend lets user review/edit orders and enter credentials.
 3. `POST /api/publish` proxies each order one-by-one to the Control Mob API.
+4. After publish, a ZIP report (CSV + JSON) is auto-generated in the browser and downloaded.
+
+## Frontend — `public/app.js`
+
+All frontend logic is in a single `app.js` file. No framework, no bundler.
+
+**Session state (`sessionState`):** holds `orders`, `filename`, `activeEditorIndex`, and `activeTab`. Reset on every new PDF upload.
+
+**Step flow (UI sections):**
+1. Upload PDF → server parses and returns `orders` array.
+2. Global defaults (DataPrevisao override, CEP) — applied to all orders at once.
+3. Review/edit each order — expandable rows with a two-tab editor:
+   - **Client tab:** nome, endereço, bairro, cidade, UF, CEP, telefone, observação.
+   - **Item tab:** descProduto, valorMontagem, valorUnitario, datas de previsão.
+4. API credentials (API_KEY / SECRET_KEY).
+5. Publish + progress log.
+
+**Order summary badges:** shown above the review table — total, ESTOF count, REVISÃO count, DESMONTAGEM count.
+
+**`estofOverride` / `revisaoOverride` flags:** set by the parser on each item. The frontend uses them to style table rows and label the `valorMontagem` field (e.g., "R$25 — ESTOF", "R$20 — REVISÃO"). These flags travel with the order object but are not sent to the API.
+
+**ZIP report (JSZip — loaded from CDN):** Generated entirely in the browser after batch publish. The ZIP contains:
+- `Relatorio_Montagem_<filename>.csv` — one row per order with key fields.
+- `Dados_Publicados_API_<filename>.json` — full `sessionState.orders` array.
+- Downloaded automatically as `Relatorio_Completo_<filename>_<YYYY-MM-DD>.zip`.
+
+## pdf-parser.js
+
+`extractTextFromPDF(buffer)` uses `unpdf` with `{ mergePages: true }` — all PDF pages are flattened into a single string before parsing. This is intentional; the parser assumes a linear text stream.
 
 ## nota-mapper.js — the critical parser
 
@@ -54,18 +90,25 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 - **Fallback (pós-COMIS):** Used when client or address was not found in the primary path.
 - Orders with the same `nroOrdemMontagem` are merged (items concatenated).
 
+**`extractMontador(text)`:** Reads the `Montador:` header from the raw PDF text. Default fallback if not found: `'L-05 REIS NEGOCIOS , MONTAGENS E INTERMEDIACOES'`. The result populates no field in the current API payload (field `codigoInternoMontador` is always `""`).
+
 **Fixed/hardcoded values:**
 - `nroProduto` is always `"2026"` (internal code).
+- `codigoInternoMontador` is always `""`.
+- `dataAgendamento` is always `""`.
+- `idEmpresa` is always `0`.
+- `nroVendedor` is always `0`.
 - Default DDD for phones without area code: `98` (Maranhão).
 - Default city/UF: `SAO LUIS / MA`.
 - Default `cep`: `"65000000"` — should be overridden via frontend defaults.
 - `codigoInternoClassificacaoCliente` is always `"ML"`.
+- `nroTelefone` fallback when no phone found in block: `"999999999"`.
 
 **`valorMontagem` override rules (applied in order, last wins):**
 0. Default (no rule matches) → `valorMontagem = 0`. The COMIS field from the PDF is **not** used.
-1. Product description matches `/ESTOF/i` → `valorMontagem = 25` (R$25).
+1. Product description matches `/ESTOF/i` → `valorMontagem = 25` (R$25). Sets `estofOverride = true`.
 2. Product description matches `CJ MESA ALAMO ROSE 4C TEC 80X120 IMBUIA/OFF` exactly → `valorMontagem = 25`.
-3. Date type is `REVISÃO` (block opened by `REVISÃO - DD/MM/YYYY`) → `valorMontagem = 20` (R$20). This overrides rules 1 and 2.
+3. Date type is `REVISÃO` (block opened by `REVISÃO - DD/MM/YYYY`) → `valorMontagem = 20` (R$20). Sets `revisaoOverride = true`. This overrides rules 1 and 2.
 
 **`tipoOrdemMontagem` auto-detection (set per order, not overrideable globally):**
 - Block opened by `MONTAGEM - DD/MM/YYYY` → `tipoOrdemMontagem = 124`
@@ -77,6 +120,23 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 
 **`ADDR_PREFIX_RE` — address line detection:**
 - `CJ` is intentionally **not** in the prefix list. "CJ" appears in product names (e.g., "CJ MESA ALAMO...") and would cause misclassification if treated as "CONJUNTO" address prefix.
+
+**`extractAddressParts` — UF recognition:**
+- Only these UF codes are recognized in address parsing: `MA, AP, PA, CE, PI, TO`. Adding a city from another state requires extending this list.
+
+**`numero` extraction:**
+- Extracted from the endereço using `Nº|NUMERO|N[0º]` regex. Defaults to `'S/N'` when not found or when the address contains `'S/N'` or `'SEM NUMERO'`.
+
+**`bairro` fallback:**
+- If no bairro is parsed from the address (or the parsed value starts with `'R '` or exceeds 30 chars), a keyword scan of the `endereco` string against a known-bairros list is attempted: `TURU, RECANTO, COHAB, ANJO DA GUARDA, CIDADE OPERARIA, PACO, MIRITIUA, LUMIAR, CENTRO, IPEM, VINHAIS`. Falls back to `'CENTRO'` if none match.
+
+**`observacaoConsolidada` structure:**
+Built as: `Turno: <turno>. <referencia_limpa> Tel: (<ddd>) <numero> / ...`
+- `turno` is parsed from `:: <word>` pattern in the block; defaults to `'Manha'`.
+- `referencia` is text after the city/UF found in the fallback path.
+- Phones are appended as a `/`-separated list.
+- Noise patterns removed from `referencia`: `Data e visto do coordenador...`, `Magazine Liliani...`, `Ordem de Montagem...`, `Liliani Integrated System...`, pagination markers.
+- The same string is written to both `observacao` and `observacaoPedido` on the `ordemServico`.
 
 **Fields `dataPrevisaoEntrega` and `dataPrevisaoMontagem`** in each item are both set to the order's scheduling date (`formattedDate`). The frontend step 2 exposes a `DataPrevisao` global default that can override these for the entire batch.
 
@@ -98,6 +158,10 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 
 **API JSON contract:** see `docs/struct_api_controlmob.json` for the full field schema sent to Control Mob.
 
+## api-proxy.js
+
+`proxyRequest()` forwards requests to Control Mob with a **15-second timeout**. On HTTP errors it returns the upstream `status`, `statusText`, and `data` — never throws to the caller.
+
 ## Deploy
 
 Vercel serverless via `api/index.js`. The `unpdf` package uses dynamic `import()` specifically for Vercel compatibility — do not convert to `require()`. File size limit is 4.5 MB (Vercel limit).
@@ -106,4 +170,4 @@ Vercel serverless via `api/index.js`. The `unpdf` package uses dynamic `import()
 
 - Node.js CommonJS (`"type": "commonjs"` in package.json)
 - Express 5, multer 2 (memory storage), axios, unpdf, dotenv
-
+- Frontend: vanilla JS/HTML/CSS — JSZip 3.10.1 and Lucide icons loaded from CDN (no npm)
