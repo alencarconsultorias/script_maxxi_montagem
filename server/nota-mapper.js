@@ -503,7 +503,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
         nroFilial: nroFilial,
         nroOrdemMontagem: nroOrdemMontagem,
         nroPedido: nroPedido,
-        nroProduto: "2026",
+        nroProduto: String(Math.floor(Math.random() * 9000) + 1000),
         observacaoMontagem: observacaoConsolidada,
         qtdHorasMontagem: 0,
         quantidade: 1,

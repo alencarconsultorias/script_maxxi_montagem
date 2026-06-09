@@ -31,7 +31,6 @@ const defIdEmpresa = document.getElementById('def-id-empresa');
 const defClassif = document.getElementById('def-classif');
 const defCep = document.getElementById('def-cep');
 const defTipoOrdem = document.getElementById('def-tipo-ordem');
-const defProdCod = document.getElementById('def-prod-cod');
 const defDataPrevisao = document.getElementById('def-data-previsao');
 const btnApplyDefaults = document.getElementById('btn-apply-defaults');
 
@@ -170,7 +169,6 @@ btnApplyDefaults.addEventListener('click', () => {
   const idEmpresa = parseInt(defIdEmpresa.value, 10) || 0;
   const classif = defClassif.value.trim() || 'ML';
   const cep = defCep.value.trim() || '65000000';
-  const prodCod = defProdCod.value.trim() || '2026';
   const dataPrevisao = defDataPrevisao.value; // YYYY-MM-DD, vazio = não sobrescreve
 
   sessionState.orders.forEach(ordem => {
@@ -185,7 +183,6 @@ btnApplyDefaults.addEventListener('click', () => {
 
     // Atualiza nos Itens
     ordem.itens.forEach(item => {
-      item.nroProduto = prodCod;
       if (dataPrevisao) {
         item.dataPrevisaoMontagem = dataPrevisao;
         item.dataPrevisaoEntrega = dataPrevisao;
