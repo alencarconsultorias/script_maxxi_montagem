@@ -62,6 +62,7 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 - `codigoInternoClassificacaoCliente` is always `"ML"`.
 
 **`valorMontagem` override rules (applied in order, last wins):**
+0. Default (no rule matches) → `valorMontagem = 0`. The COMIS field from the PDF is **not** used.
 1. Product description matches `/ESTOF/i` → `valorMontagem = 25` (R$25).
 2. Product description matches `CJ MESA ALAMO ROSE 4C TEC 80X120 IMBUIA/OFF` exactly → `valorMontagem = 25`.
 3. Date type is `REVISÃO` (block opened by `REVISÃO - DD/MM/YYYY`) → `valorMontagem = 20` (R$20). This overrides rules 1 and 2.

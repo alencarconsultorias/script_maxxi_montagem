@@ -250,10 +250,9 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
   const productMatch = blockText.match(productRegex);
 
   let valorUnitario = 1.0;
-  let valorMontagem = 0.0;
+  let valorMontagem = 0;
   if (productMatch) {
     valorUnitario = parseBrazilianFloat(productMatch[1]);
-    valorMontagem = parseBrazilianFloat(productMatch[2]);
   }
 
   // 4. Índices chave
