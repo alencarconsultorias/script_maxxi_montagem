@@ -180,10 +180,10 @@ function mapTextToJSON(rawText) {
     }
   }
 
-  // Agrupar por nroOrdemMontagem
+  // Agrupar por nroPedido (nroOrdemMontagem é enviado como "" para a API)
   const groupedOrdens = new Map();
   for (const ordem of rawOrdens) {
-    const key = ordem.nroOrdemMontagem;
+    const key = ordem.ordemServico.nroPedido;
     if (groupedOrdens.has(key)) {
       const existing = groupedOrdens.get(key);
       existing.itens.push(...ordem.itens);
@@ -239,8 +239,6 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
   }
 
   const formattedDate = formatDateToISO(dateStr);
-  const nroOrdemMontagem = nroPedido || parseInt(dateStr.replace(/\//g, ''), 10) + index;
-
   // 2. Turno
   const turnoMatch = blockText.match(/:\s*:\s*([\wÀ-ÿ]+)/i);
   const turno = turnoMatch ? turnoMatch[1].trim() : 'Manha';
@@ -501,7 +499,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
         dataPrevisaoMontagem: formattedDate,
         descProduto: descProduto,
         nroFilial: nroFilial,
-        nroOrdemMontagem: nroOrdemMontagem,
+        nroOrdemMontagem: 0,
         nroPedido: nroPedido,
         nroProduto: String(Math.floor(Math.random() * 9000) + 1000),
         observacaoMontagem: observacaoConsolidada,
@@ -514,7 +512,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
         ordemTipo: ordemTipo
       }
     ],
-    nroOrdemMontagem: nroOrdemMontagem,
+    nroOrdemMontagem: 0,
     ordemServico: {
       bairro: bairro || "CENTRO",
       cep: "65000000",
@@ -530,7 +528,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
       nomeCliente: nomeCliente,
       nroDDD: nroDDD,
       nroFilial: nroFilial,
-      nroOrdemMontagem: nroOrdemMontagem,
+      nroOrdemMontagem: 0,
       nroPedido: nroPedido,
       nroTelefone: nroTelefone || "999999999",
       nroTelefoneExtra: nroTelefoneExtra,
