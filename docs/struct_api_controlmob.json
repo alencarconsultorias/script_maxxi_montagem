@@ -16,6 +16,20 @@
                 "quantidade": 0,
                 "valorMontagem": 0,
                 "valorUnitario": 0
+            },
+            {
+                "dataPrevisaoEntrega": "yyyy-MM-dd",
+                "dataPrevisaoMontagem": "yyyy-MM-dd",
+                "descProduto": "string",
+                "nroFilial": 0,
+                "nroOrdemMontagem": 0,
+                "nroPedido": 0,
+                "nroProduto": "string",
+                "observacaoMontagem": "string",
+                "qtdHorasMontagem": 0,
+                "quantidade": 0,
+                "valorMontagem": 0,
+                "valorUnitario": 0
             }
         ],
         "nroOrdemMontagem": 0,

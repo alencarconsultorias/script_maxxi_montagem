@@ -186,6 +186,13 @@ function mapTextToJSON(rawText) {
     const key = ordem.ordemServico.nroPedido;
     if (groupedOrdens.has(key)) {
       const existing = groupedOrdens.get(key);
+      const usedNroProduto = new Set(existing.itens.map(it => it.nroProduto));
+      for (const item of ordem.itens) {
+        while (usedNroProduto.has(item.nroProduto)) {
+          item.nroProduto = String(Math.floor(Math.random() * 9000) + 1000);
+        }
+        usedNroProduto.add(item.nroProduto);
+      }
       existing.itens.push(...ordem.itens);
       existing.totalItensMontagem = existing.itens.length;
 
