@@ -19,7 +19,9 @@ No build step. No test suite. The app module is exported from `server/index.js` 
 
 ## Version
 
-Current version: **1.1.9** — tracked in `package.json`, `package-lock.json`, and the footer of `public/index.html`.
+Current version: **1.2.9** — tracked in `package.json`, `package-lock.json`, and the footer of `public/index.html`.
+
+> **Note:** bump version in all three files simultaneously whenever releasing.
 
 ## Environment variables (`.env`)
 
@@ -59,14 +61,16 @@ All frontend logic is in a single `app.js` file. No framework, no bundler.
 
 **Step flow (UI sections):**
 1. Upload PDF → server parses and returns `orders` array.
-2. Global defaults (DataPrevisao override, CEP) — applied to all orders at once.
+2. Global defaults (DataPrevisao override, CEP) — applied to all orders at once. There is **no** global nroProduto override — it is generated per item at parse time.
 3. Review/edit each order — expandable rows with a two-tab editor:
-   - **Client tab:** nome, endereço, bairro, cidade, UF, CEP, telefone, observação.
+   - **Client tab:** nome, endereço, bairro, cidade, UF, CEP, telefone, equipe, observação.
    - **Item tab:** descProduto, valorMontagem, valorUnitario, datas de previsão.
 4. API credentials (API_KEY / SECRET_KEY).
 5. Publish + progress log.
 
 **Order summary badges:** shown above the review table — total, ESTOF count, REVISÃO count, DESMONTAGEM count.
+
+**Equipe column and editor dropdown:** The review table has an "Equipe" column showing the team name resolved from `idEquipe` via `TEAM_MAP` (defined at the top of `app.js`). The client tab exposes a `<select>` dropdown to manually override `idEquipe` per order. `TEAM_MAP` in `app.js` is the inverse of `CITY_TEAM_MAP` in `nota-mapper.js` — keep both in sync if adding new cities/teams.
 
 **`estofOverride` / `revisaoOverride` flags:** set by the parser on each item. The frontend uses them to style table rows and label the `valorMontagem` field (e.g., "R$25 — ESTOF", "R$20 — REVISÃO"). These flags travel with the order object but are not sent to the API.
 
@@ -88,12 +92,13 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 - Within a block, `unpdf` preserves visual order: product lines → client name → address lines → `BASE: <valor> COMIS: <valor>`.
 - **Primary path (pré-BASE):** Finds the first line matching `ADDR_PREFIX_RE` (RUA, AV, TRAVESSA, PASSAGEM, etc.). The line immediately before it is the client name; lines before that form the product description; lines from the address prefix onward form the address.
 - **Fallback (pós-COMIS):** Used when client or address was not found in the primary path.
-- Orders with the same `nroOrdemMontagem` are merged (items concatenated).
+- Orders with the same `nroPedido` are merged (items concatenated). Grouping was previously by `nroOrdemMontagem` but switched because that field is now always `0`. When merging, `nroProduto` collision is checked across all items in the group — duplicate values are regenerated randomly until unique.
 
 **`extractMontador(text)`:** Reads the `Montador:` header from the raw PDF text. Default fallback if not found: `'L-05 REIS NEGOCIOS , MONTAGENS E INTERMEDIACOES'`. The result populates no field in the current API payload (field `codigoInternoMontador` is always `""`).
 
 **Fixed/hardcoded values:**
-- `nroProduto` is a random 4-digit number (1000–9999) generated at parse time per item.
+- `nroProduto` — random 4-digit number (1000–9999) generated at parse time per item. **Not overrideable** via global defaults; the frontend `def-prod-cod` field was removed.
+- `nroOrdemMontagem` — always `0` (fixed default). Previously derived from `nroPedido`; changed to avoid duplicate-key conflicts in the API. Applies to the item, the order root, and `ordemServico.nroOrdemMontagem`.
 - `codigoInternoMontador` is always `""`.
 - `dataAgendamento` is always `""`.
 - `idEmpresa` is always `0`.
