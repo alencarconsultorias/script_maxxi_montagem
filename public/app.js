@@ -44,7 +44,16 @@ const defClassif = document.getElementById('def-classif');
 const defCep = document.getElementById('def-cep');
 const defTipoOrdem = document.getElementById('def-tipo-ordem');
 const defDataPrevisao = document.getElementById('def-data-previsao');
+const defEquipe = document.getElementById('def-equipe');
 const btnApplyDefaults = document.getElementById('btn-apply-defaults');
+
+// Populate equipe dropdown from TEAM_MAP
+Object.entries(TEAM_MAP).forEach(([id, name]) => {
+  const opt = document.createElement('option');
+  opt.value = id;
+  opt.textContent = `${name} (${id})`;
+  defEquipe.appendChild(opt);
+});
 
 // Tabela
 const ordersTbody = document.getElementById('orders-tbody');
@@ -182,6 +191,8 @@ btnApplyDefaults.addEventListener('click', () => {
   const classif = defClassif.value.trim() || 'ML';
   const cep = defCep.value.trim() || '65000000';
   const dataPrevisao = defDataPrevisao.value; // YYYY-MM-DD, vazio = não sobrescreve
+  const equipeVal = defEquipe.value;
+  const equipeId = equipeVal !== '' ? parseInt(equipeVal, 10) : null;
 
   sessionState.orders.forEach(ordem => {
     // Atualiza na OS
@@ -191,6 +202,9 @@ btnApplyDefaults.addEventListener('click', () => {
     // tipoOrdemMontagem é definido automaticamente pelo tipo detectado no PDF (MONTAGEM=124, DESMONTAGEM=125)
     if (dataPrevisao) {
       ordem.ordemServico.dataPrevisaoMontagem = dataPrevisao;
+    }
+    if (equipeId !== null) {
+      ordem.ordemServico.idEquipe = equipeId;
     }
 
     // Atualiza nos Itens
