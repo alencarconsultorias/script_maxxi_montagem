@@ -98,7 +98,7 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 
 **Fixed/hardcoded values:**
 - `nroProduto` — random 4-digit number (1000–9999) generated at parse time per item. **Not overrideable** via global defaults; the frontend `def-prod-cod` field was removed.
-- `nroOrdemMontagem` — always `0` (fixed default). Previously derived from `nroPedido`; changed to avoid duplicate-key conflicts in the API. Applies to the item, the order root, and `ordemServico.nroOrdemMontagem`.
+- `nroOrdemMontagem` — same value as `nroPedido`. Applies to the item, the order root, and `ordemServico.nroOrdemMontagem`.
 - `codigoInternoMontador` is always `""`.
 - `dataAgendamento` is always `""`.
 - `idEmpresa` is always `0`.

@@ -180,7 +180,7 @@ function mapTextToJSON(rawText) {
     }
   }
 
-  // Agrupar por nroPedido (nroOrdemMontagem é enviado como "" para a API)
+  // Agrupar por nroPedido (nroOrdemMontagem = nroPedido)
   const groupedOrdens = new Map();
   for (const ordem of rawOrdens) {
     const key = ordem.ordemServico.nroPedido;
@@ -506,7 +506,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
         dataPrevisaoMontagem: formattedDate,
         descProduto: descProduto,
         nroFilial: nroFilial,
-        nroOrdemMontagem: 0,
+        nroOrdemMontagem: nroPedido,
         nroPedido: nroPedido,
         nroProduto: String(Math.floor(Math.random() * 9000) + 1000),
         observacaoMontagem: observacaoConsolidada,
@@ -519,7 +519,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
         ordemTipo: ordemTipo
       }
     ],
-    nroOrdemMontagem: 0,
+    nroOrdemMontagem: nroPedido,
     ordemServico: {
       bairro: bairro || "CENTRO",
       cep: "65000000",
@@ -535,7 +535,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
       nomeCliente: nomeCliente,
       nroDDD: nroDDD,
       nroFilial: nroFilial,
-      nroOrdemMontagem: 0,
+      nroOrdemMontagem: nroPedido,
       nroPedido: nroPedido,
       nroTelefone: nroTelefone || "999999999",
       nroTelefoneExtra: nroTelefoneExtra,
