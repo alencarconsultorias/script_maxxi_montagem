@@ -19,7 +19,7 @@ No build step. No test suite. The app module is exported from `server/index.js` 
 
 ## Version
 
-Current version: **1.3.0** — tracked in `package.json`, `package-lock.json`, and the footer of `public/index.html`.
+Current version: **1.4.0** — tracked in `package.json`, `package-lock.json`, and the footer of `public/index.html`.
 
 > **Note:** bump version in all three files simultaneously whenever releasing.
 
