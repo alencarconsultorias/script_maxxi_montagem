@@ -133,7 +133,7 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 - Extracted from the endereço using `Nº|NUMERO|N[0º]` regex. Defaults to `'S/N'` when not found or when the address contains `'S/N'` or `'SEM NUMERO'`.
 
 **`bairro` fallback:**
-- If no bairro is parsed from the address (or the parsed value starts with `'R '` or exceeds 30 chars), a keyword scan of the `endereco` string against a known-bairros list is attempted: `TURU, RECANTO, COHAB, ANJO DA GUARDA, CIDADE OPERARIA, PACO, MIRITIUA, LUMIAR, CENTRO, IPEM, VINHAIS`. Falls back to `'CENTRO'` if none match.
+- If no bairro is parsed from the address (or the parsed value starts with `'R '` or exceeds 30 chars), a keyword scan of the `endereco` string against a known-bairros list is attempted: `TURU, RECANTO, COHAB, ANJO DA GUARDA, CIDADE OPERARIA, PACO, MIRITIUA, LUMIAR, CENTRO, IPEM, VINHAIS`. Falls back to `''` (empty string) if none match.
 
 **`observacaoConsolidada` structure:**
 Built as: `Turno: <turno>. <referencia_limpa> Tel: (<ddd>) <numero> / ...`

@@ -289,7 +289,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
 
   let descProduto = 'PRODUTO NÃO IDENTIFICADO';
   let nomeCliente = 'CLIENTE NÃO IDENTIFICADO';
-  let bairro = 'CENTRO';
+  let bairro = '';
   let cidade = 'SAO LUIS';
   let uf = 'MA';
   let endereco = '';
@@ -437,7 +437,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
     const defaultBairros = ['TURU', 'RECANTO', 'COHAB', 'ANJO DA GUARDA', 'CIDADE OPERARIA', 'PACO', 'MIRITIUA', 'LUMIAR', 'CENTRO', 'IPEM', 'VINHAIS'];
     const textUpper = endereco.toUpperCase();
     const foundBairro = defaultBairros.find(b => textUpper.includes(b));
-    bairro = foundBairro || 'CENTRO';
+    bairro = foundBairro || '';
   }
 
   // Produto com "ESTOF" → valor fixo de R$25
@@ -521,7 +521,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
     ],
     nroOrdemMontagem: nroPedido,
     ordemServico: {
-      bairro: bairro || "CENTRO",
+      bairro: bairro || "",
       cep: "65000000",
       cidade: cidade.toUpperCase() || "SAO LUIS",
       codigoInternoClassificacaoCliente: "ML",
