@@ -3,6 +3,31 @@
  * Converte o texto bruto extraído do PDF no formato estruturado para a API.
  */
 
+const fs = require('fs');
+const path = require('path');
+
+// Carrega lista de bairros conhecidos na inicialização do módulo
+let KNOWN_BAIRROS = [];
+try {
+  const filePath = path.join(__dirname, '..', 'docs', 'neighborhoods.txt');
+  const lines = fs.readFileSync(filePath, 'utf8').split(/[\r\n]+/);
+  const seen = new Set();
+  for (const line of lines) {
+    const cleaned = line.replace(/^[,\s]+/, '').replace(/[,\s]+$/, '').trim().toUpperCase();
+    if (!cleaned || cleaned.length < 3 || /^\d/.test(cleaned)) continue;
+    if (!seen.has(cleaned)) {
+      seen.add(cleaned);
+      KNOWN_BAIRROS.push(cleaned);
+    }
+  }
+  // Nomes mais longos primeiro para evitar match parcial (ex: "CIDADE OPERARIA" antes de "CIDADE")
+  KNOWN_BAIRROS.sort((a, b) => b.length - a.length);
+  console.log(`[nota-mapper] ${KNOWN_BAIRROS.length} bairros carregados de neighborhoods.txt`);
+} catch (e) {
+  console.warn('[nota-mapper] neighborhoods.txt não encontrado, usando lista mínima de fallback');
+  KNOWN_BAIRROS = ['TURU', 'RECANTO', 'COHAB', 'ANJO DA GUARDA', 'CIDADE OPERARIA', 'PACO', 'MIRITIUA', 'LUMIAR', 'CENTRO', 'IPEM', 'VINHAIS'];
+}
+
 /**
  * Converte data do formato DD/MM/YYYY para YYYY-MM-DD
  * @param {string} dateStr Data no formato DD/MM/YYYY
@@ -432,11 +457,14 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
   }
   endereco = endereco.replace(/^[,.\s]+/, '').trim();
 
-  // Fallback inteligente para bairros conhecidos
+  // Fallback: varre lista completa de bairros conhecidos contra endereço+referência e, se necessário, o bloco inteiro
   if (!bairro || bairro.toUpperCase().startsWith('R ') || bairro.length > 30) {
-    const defaultBairros = ['TURU', 'RECANTO', 'COHAB', 'ANJO DA GUARDA', 'CIDADE OPERARIA', 'PACO', 'MIRITIUA', 'LUMIAR', 'CENTRO', 'IPEM', 'VINHAIS'];
-    const textUpper = endereco.toUpperCase();
-    const foundBairro = defaultBairros.find(b => textUpper.includes(b));
+    const scanText = ' ' + [endereco, referencia].join(' ').toUpperCase().replace(/\s+/g, ' ') + ' ';
+    let foundBairro = KNOWN_BAIRROS.find(b => scanText.includes(' ' + b + ' '));
+    if (!foundBairro) {
+      const blockUpper = ' ' + blockText.toUpperCase().replace(/\s+/g, ' ') + ' ';
+      foundBairro = KNOWN_BAIRROS.find(b => blockUpper.includes(' ' + b + ' '));
+    }
     bairro = foundBairro || '';
   }
 
