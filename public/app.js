@@ -19,8 +19,7 @@ const TEAM_OPTIONS = Object.entries(TEAM_MAP)
 let sessionState = {
   orders: [],
   filename: '',
-  activeEditorIndex: null, // Índice da ordem expandida para edição
-  activeTab: 'client' // Aba ativa no editor ('client' ou 'item')
+  activeEditorIndex: null // Índice da ordem expandida para edição
 };
 
 // Seletores do DOM
@@ -306,153 +305,157 @@ function renderTable() {
 
     tr.addEventListener('click', () => toggleRow(index));
     ordersTbody.appendChild(tr);
-
-    // Se expandido, injeta linha do painel editor
-    if (isExpanded) {
-      const trEditor = document.createElement('tr');
-      trEditor.className = 'details-row';
-      const itemCardsHtml = ordem.itens.map((itm, itemIdx) => `
-        <div class="item-card${ordem.itens.length > 1 ? ' multi' : ''}">
-          ${ordem.itens.length > 1 ? `<div class="item-card-header">Produto ${itemIdx + 1} de ${ordem.itens.length}</div>` : ''}
-          <div class="form-group span-2">
-            <label>Descrição do Produto</label>
-            <input type="text" id="edit-item-desc-${itemIdx}" value="${itm.descProduto.replace(/"/g, '&quot;')}">
-          </div>
-          <div class="form-group">
-            <label>Valor Montagem (Comissão)${itm.estofOverride ? ' <span class="estof-label">R$25 — ESTOF</span>' : itm.revisaoOverride ? ' <span class="revisao-label">R$20 — REVISÃO</span>' : ''}</label>
-            <input type="number" step="0.01" id="edit-item-val-mont-${itemIdx}" value="${itm.valorMontagem}" ${itm.estofOverride ? 'class="input-estof-override"' : itm.revisaoOverride ? 'class="input-revisao-override"' : ''}>
-          </div>
-          <div class="form-group">
-            <label>Valor Unitário (Base)</label>
-            <input type="number" step="0.01" id="edit-item-val-unit-${itemIdx}" value="${itm.valorUnitario}">
-          </div>
-          <div class="form-group">
-            <label>Quantidade</label>
-            <input type="number" id="edit-item-qtd-${itemIdx}" value="${itm.quantidade}">
-          </div>
-          <div class="form-group">
-            <label>Data Prev. Montagem</label>
-            <input type="date" id="edit-item-prev-${itemIdx}" value="${itm.dataPrevisaoMontagem}">
-          </div>
-        </div>
-      `).join('');
-      trEditor.innerHTML = `
-        <td colspan="10">
-          <div class="editor-wrapper">
-            <div class="editor-tabs">
-              <button class="tab-btn ${sessionState.activeTab === 'client' ? 'active' : ''}" onclick="switchTab('client')">
-                <i data-lucide="user"></i> Dados do Cliente (OS)
-              </button>
-              <button class="tab-btn ${sessionState.activeTab === 'item' ? 'active' : ''}" onclick="switchTab('item')">
-                <i data-lucide="package"></i> Detalhes do Item/Montagem
-              </button>
-            </div>
-            
-            <!-- ABA CLIENTE -->
-            <div class="editor-pane ${sessionState.activeTab === 'client' ? 'active' : ''}">
-              <div class="form-group">
-                <label>Nome do Cliente</label>
-                <input type="text" id="edit-client-nome" value="${client.nomeCliente}">
-              </div>
-              <div class="form-group">
-                <label>CPF (Essencial)</label>
-                <input type="text" id="edit-client-cpf" value="${client.cpf || ''}" placeholder="Apenas números">
-              </div>
-              <div class="form-group">
-                <label>CEP (Essencial)</label>
-                <input type="text" id="edit-client-cep" value="${client.cep}" maxlength="8">
-              </div>
-              <div class="form-group">
-                <label>Telefone</label>
-                <input type="text" id="edit-client-fone" value="${client.nroTelefone}">
-              </div>
-              <div class="form-group span-2">
-                <label>Endereço Completo</label>
-                <input type="text" id="edit-client-end" value="${client.endereco}">
-              </div>
-              <div class="form-group">
-                <label>Número</label>
-                <input type="text" id="edit-client-num" value="${client.numero}">
-              </div>
-              <div class="form-group">
-                <label>Bairro</label>
-                <input type="text" id="edit-client-bairro" value="${client.bairro}">
-              </div>
-              <div class="form-group">
-                <label>Cidade</label>
-                <input type="text" id="edit-client-cidade" value="${client.cidade}">
-              </div>
-              <div class="form-group">
-                <label>UF</label>
-                <input type="text" id="edit-client-uf" value="${client.uf}" maxlength="2">
-              </div>
-              <div class="form-group">
-                <label>Equipe</label>
-                <select id="edit-client-equipe">
-                  <option value="">-- Não definido --</option>
-                  ${TEAM_OPTIONS.replace(`value="${client.idEquipe}"`, `value="${client.idEquipe}" selected`)}
-                </select>
-              </div>
-              <div class="form-group span-2">
-                <label>Observações Consolidadas</label>
-                <textarea id="edit-client-obs" rows="2">${client.observacao}</textarea>
-              </div>
-            </div>
-
-            <!-- ABA ITEM -->
-            <div class="editor-pane ${sessionState.activeTab === 'item' ? 'active' : ''}">
-              <div class="form-group">
-                <label>Código Produto (Essencial)</label>
-                <input type="text" id="edit-item-cod" value="${item.nroProduto}">
-              </div>
-              <div class="form-group">
-                <label>Nº Pedido</label>
-                <input type="number" id="edit-item-pedido" value="${item.nroPedido}">
-              </div>
-              <div class="form-group">
-                <label>Filial (Lj)</label>
-                <input type="number" id="edit-item-filial" value="${item.nroFilial}">
-              </div>
-              <div class="form-group">
-                <label>ID Empresa</label>
-                <input type="number" id="edit-item-empresa" value="${client.idEmpresa}">
-              </div>
-              ${itemCardsHtml}
-            </div>
-
-            <div class="form-actions-inline">
-              <button class="btn btn-secondary" onclick="toggleRow(null)">Cancelar</button>
-              <button class="btn btn-primary" onclick="saveActiveOrder(${index})">
-                <i data-lucide="check"></i> Confirmar Edições
-              </button>
-            </div>
-          </div>
-        </td>
-      `;
-      ordersTbody.appendChild(trEditor);
-    }
   });
 
   // Atualizar os ícones do Lucide
   lucide.createIcons();
 }
 
-// Expande / Contrai linha
-function toggleRow(index) {
-  if (sessionState.activeEditorIndex === index) {
-    sessionState.activeEditorIndex = null;
-  } else {
-    sessionState.activeEditorIndex = index;
-    sessionState.activeTab = 'client'; // volta para aba padrão
-  }
-  renderTable();
+// Abre o modal de edição para a ordem de índice `index`
+function openEditModal(index) {
+  const ordem = sessionState.orders[index];
+  const client = ordem.ordemServico;
+  const item = ordem.itens[0] || {};
+
+  document.getElementById('modal-order-id').textContent = `Ordem #${client.nroPedido}`;
+  document.getElementById('modal-client-name').textContent = client.nomeCliente;
+  document.getElementById('modal-confirm-btn').onclick = () => saveActiveOrder(index);
+
+  const itemCardsHtml = ordem.itens.map((itm, itemIdx) => `
+    <div class="item-card${ordem.itens.length > 1 ? ' multi' : ''}">
+      ${ordem.itens.length > 1 ? `<div class="item-card-header">Produto ${itemIdx + 1} de ${ordem.itens.length}</div>` : ''}
+      <div class="form-group span-2">
+        <label>Descrição do Produto</label>
+        <input type="text" id="edit-item-desc-${itemIdx}" value="${itm.descProduto.replace(/"/g, '&quot;')}">
+      </div>
+      <div class="form-group">
+        <label>Valor Montagem (Comissão)${itm.estofOverride ? ' <span class="estof-label">R$25 — ESTOF</span>' : itm.revisaoOverride ? ' <span class="revisao-label">R$20 — REVISÃO</span>' : ''}</label>
+        <input type="number" step="0.01" id="edit-item-val-mont-${itemIdx}" value="${itm.valorMontagem}" ${itm.estofOverride ? 'class="input-estof-override"' : itm.revisaoOverride ? 'class="input-revisao-override"' : ''}>
+      </div>
+      <div class="form-group">
+        <label>Valor Unitário (Base)</label>
+        <input type="number" step="0.01" id="edit-item-val-unit-${itemIdx}" value="${itm.valorUnitario}">
+      </div>
+      <div class="form-group">
+        <label>Quantidade</label>
+        <input type="number" id="edit-item-qtd-${itemIdx}" value="${itm.quantidade}">
+      </div>
+      <div class="form-group">
+        <label>Data Prev. Montagem</label>
+        <input type="date" id="edit-item-prev-${itemIdx}" value="${itm.dataPrevisaoMontagem}">
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="editor-two-col">
+
+      <!-- SEÇÃO CLIENTE -->
+      <div class="editor-section">
+        <div class="editor-section-title">
+          <i data-lucide="user"></i> Dados do Cliente (OS)
+        </div>
+        <div class="editor-fields">
+          <div class="form-group span-2">
+            <label>Nome do Cliente</label>
+            <input type="text" id="edit-client-nome" value="${client.nomeCliente}">
+          </div>
+          <div class="form-group">
+            <label>CPF (Essencial)</label>
+            <input type="text" id="edit-client-cpf" value="${client.cpf || ''}" placeholder="Apenas números">
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="edit-client-fone" value="${client.nroTelefone}">
+          </div>
+          <div class="form-group">
+            <label>CEP (Essencial)</label>
+            <input type="text" id="edit-client-cep" value="${client.cep}" maxlength="8">
+          </div>
+          <div class="form-group">
+            <label>Número</label>
+            <input type="text" id="edit-client-num" value="${client.numero}">
+          </div>
+          <div class="form-group span-2">
+            <label>Endereço Completo</label>
+            <input type="text" id="edit-client-end" value="${client.endereco}">
+          </div>
+          <div class="form-group">
+            <label>Bairro</label>
+            <input type="text" id="edit-client-bairro" value="${client.bairro}">
+          </div>
+          <div class="form-group">
+            <label>Cidade</label>
+            <input type="text" id="edit-client-cidade" value="${client.cidade}">
+          </div>
+          <div class="form-group">
+            <label>UF</label>
+            <input type="text" id="edit-client-uf" value="${client.uf}" maxlength="2">
+          </div>
+          <div class="form-group">
+            <label>Equipe</label>
+            <select id="edit-client-equipe">
+              <option value="">-- Não definido --</option>
+              ${TEAM_OPTIONS.replace(`value="${client.idEquipe}"`, `value="${client.idEquipe}" selected`)}
+            </select>
+          </div>
+          <div class="form-group span-2">
+            <label>Observações Consolidadas</label>
+            <textarea id="edit-client-obs" rows="3">${client.observacao}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEÇÃO ITEM -->
+      <div class="editor-section">
+        <div class="editor-section-title">
+          <i data-lucide="package"></i> Item / Montagem
+        </div>
+        <div class="editor-fields">
+          <div class="form-group">
+            <label>Código Produto (Essencial)</label>
+            <input type="text" id="edit-item-cod" value="${item.nroProduto}">
+          </div>
+          <div class="form-group">
+            <label>Nº Pedido</label>
+            <input type="number" id="edit-item-pedido" value="${item.nroPedido}">
+          </div>
+          <div class="form-group">
+            <label>Filial (Lj)</label>
+            <input type="number" id="edit-item-filial" value="${item.nroFilial}">
+          </div>
+          <div class="form-group">
+            <label>ID Empresa</label>
+            <input type="number" id="edit-item-empresa" value="${client.idEmpresa}">
+          </div>
+          ${itemCardsHtml}
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  document.getElementById('edit-modal-overlay').style.display = 'flex';
+  lucide.createIcons({ nameAttr: 'data-lucide' });
 }
 
-// Troca de aba no editor
-window.switchTab = function(tabName) {
-  sessionState.activeTab = tabName;
+// Fecha o modal sem salvar
+window.closeEditModal = function() {
+  sessionState.activeEditorIndex = null;
+  document.getElementById('edit-modal-overlay').style.display = 'none';
   renderTable();
 };
+
+// Abre ou fecha o modal ao clicar na linha
+function toggleRow(index) {
+  if (index === null || sessionState.activeEditorIndex === index) {
+    closeEditModal();
+    return;
+  }
+  sessionState.activeEditorIndex = index;
+  openEditModal(index);
+  renderTable();
+}
 
 // Salva alterações da nota em edição de volta para a memória
 window.saveActiveOrder = function(index) {
@@ -500,9 +503,7 @@ window.saveActiveOrder = function(index) {
   client.dataPrevisaoMontagem = ordem.itens[0].dataPrevisaoMontagem;
   ordem.totalItensMontagem = ordem.itens.reduce((sum, itm) => sum + itm.quantidade, 0);
 
-  // Fecha editor e re-renderiza
-  sessionState.activeEditorIndex = null;
-  renderTable();
+  closeEditModal();
   log('success', `Alterações na Ordem de ${client.nomeCliente} salvas em memória.`);
 };
 
