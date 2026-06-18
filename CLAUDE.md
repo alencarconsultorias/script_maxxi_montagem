@@ -97,7 +97,7 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 **`extractMontador(text)`:** Reads the `Montador:` header from the raw PDF text. Default fallback if not found: `'L-05 REIS NEGOCIOS , MONTAGENS E INTERMEDIACOES'`. The result populates no field in the current API payload (field `codigoInternoMontador` is always `""`).
 
 **Fixed/hardcoded values:**
-- `nroProduto` — random 4-digit number (1000–9999) generated at parse time per item. **Not overrideable** via global defaults; the frontend `def-prod-cod` field was removed.
+- `nroProduto` — random 6-digit number (100000–999999) generated at parse time per item. **Not overrideable** via global defaults; the frontend `def-prod-cod` field was removed.
 - `nroOrdemMontagem` — same value as `nroPedido`. Applies to the item, the order root, and `ordemServico.nroOrdemMontagem`.
 - `codigoInternoMontador` is always `""`.
 - `dataAgendamento` is always `""`.

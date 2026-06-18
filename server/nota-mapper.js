@@ -189,7 +189,7 @@ function mapTextToJSON(rawText) {
       const usedNroProduto = new Set(existing.itens.map(it => it.nroProduto));
       for (const item of ordem.itens) {
         while (usedNroProduto.has(item.nroProduto)) {
-          item.nroProduto = String(Math.floor(Math.random() * 9000) + 1000);
+          item.nroProduto = String(Math.floor(Math.random() * 900000) + 100000);
         }
         usedNroProduto.add(item.nroProduto);
       }
@@ -508,7 +508,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
         nroFilial: nroFilial,
         nroOrdemMontagem: nroPedido,
         nroPedido: nroPedido,
-        nroProduto: String(Math.floor(Math.random() * 9000) + 1000),
+        nroProduto: String(Math.floor(Math.random() * 900000) + 100000),
         observacaoMontagem: observacaoConsolidada,
         qtdHorasMontagem: 0,
         quantidade: 1,
