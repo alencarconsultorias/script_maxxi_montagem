@@ -237,6 +237,16 @@ function mapTextToJSON(rawText) {
     }
   }
 
+  for (const ordem of groupedOrdens.values()) {
+    const seen = new Set();
+    for (const item of ordem.itens) {
+      while (seen.has(item.nroProduto)) {
+        item.nroProduto = String(Math.floor(Math.random() * 900000) + 100000);
+      }
+      seen.add(item.nroProduto);
+    }
+  }
+
   return Array.from(groupedOrdens.values());
 }
 
