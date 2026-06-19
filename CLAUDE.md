@@ -19,7 +19,7 @@ No build step. No test suite. The app module is exported from `server/index.js` 
 
 ## Version
 
-Current version: **1.7.0** — tracked in `package.json`, `package-lock.json`, and the footer of `public/index.html`.
+Current version: **1.7.2** — tracked in `package.json`, `package-lock.json`, and the footer of `public/index.html`.
 
 > **Note:** bump version in all three files simultaneously whenever releasing.
 
@@ -45,6 +45,9 @@ server/
   api-proxy.js   # Forwards requests to Control Mob API, merges .env credentials
 api/index.js     # Re-exports server app for Vercel serverless
 vercel.json      # Routes /api/* → api/index.js
+docs/
+  neighborhoods.txt       # Primary bairro list loaded at module init by nota-mapper.js
+  struct_api_controlmob.json  # Full field schema sent to Control Mob API
 ```
 
 **Data flow:**
@@ -61,8 +64,8 @@ All frontend logic is in a single `app.js` file. No framework, no bundler.
 
 **Step flow (UI sections):**
 1. Upload PDF → server parses and returns `orders` array.
-2. Global defaults (DataPrevisao override, CEP) — applied to all orders at once. There is **no** global nroProduto override — it is generated per item at parse time.
-3. Review/edit each order — expandable rows with a two-tab editor:
+2. Global defaults (DataPrevisao override, CEP, Equipe) — applied to all orders at once. There is **no** global nroProduto override — it is generated per item at parse time. Global Equipe (`def-equipe`) overrides `idEquipe` for all orders if set.
+3. Review/edit each order — **modal popup** editor with two tabs:
    - **Client tab:** nome, endereço, bairro, cidade, UF, CEP, telefone, equipe, observação.
    - **Item tab:** descProduto, valorMontagem, valorUnitario, datas de previsão.
 4. API credentials (API_KEY / SECRET_KEY).
@@ -92,7 +95,7 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 - Within a block, `unpdf` preserves visual order: product lines → client name → address lines → `BASE: <valor> COMIS: <valor>`.
 - **Primary path (pré-BASE):** Finds the first line matching `ADDR_PREFIX_RE` (RUA, AV, TRAVESSA, PASSAGEM, etc.). The line immediately before it is the client name; lines before that form the product description; lines from the address prefix onward form the address.
 - **Fallback (pós-COMIS):** Used when client or address was not found in the primary path.
-- Orders with the same `nroPedido` are merged (items concatenated). Grouping was previously by `nroOrdemMontagem` but switched because that field is now always `0`. When merging, `nroProduto` collision is checked across all items in the group — duplicate values are regenerated randomly until unique.
+- Orders with the same `nroPedido` are merged (items concatenated). Grouping was previously by `nroOrdemMontagem` but switched because that field is now always `0`. When merging, `nroProduto` collision is checked across all items in the group — duplicate values are regenerated randomly until unique. A second deduplication pass runs after all grouping is complete to catch any remaining collisions across the final order list. When merging orders with different products, the extra item's observação is appended to the main order's `observacao` as ` | Item extra: <text>`.
 
 **`extractMontador(text)`:** Reads the `Montador:` header from the raw PDF text. Default fallback if not found: `'L-05 REIS NEGOCIOS , MONTAGENS E INTERMEDIACOES'`. The result populates no field in the current API payload (field `codigoInternoMontador` is always `""`).
 
@@ -124,6 +127,7 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 - The frontend global "Tipo Ordem Montagem" field is hidden; per-order type is always auto-detected.
 
 **`ADDR_PREFIX_RE` — address line detection:**
+- Full prefix list: `RUA, R., AV, AVENIDA, TRAVESSA, TV, ESTRADA, ES, PASSAGEM, PAS, QUADRA, QD, CONJUNTO, CONJ, SETOR, SET, LOTEAMENTO, LOT, CONDOMINIO, COND, BLOCO, BL, SITIO, ALAMEDA, AL, PRACA, PC, RODOVIA, ROD, LARGO, LG, VILA, VL`.
 - `CJ` is intentionally **not** in the prefix list. "CJ" appears in product names (e.g., "CJ MESA ALAMO...") and would cause misclassification if treated as "CONJUNTO" address prefix.
 
 **`extractAddressParts` — UF recognition:**
@@ -133,7 +137,8 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 - Extracted from the endereço using `Nº|NUMERO|N[0º]` regex. Defaults to `'S/N'` when not found or when the address contains `'S/N'` or `'SEM NUMERO'`.
 
 **`bairro` fallback:**
-- If no bairro is parsed from the address (or the parsed value starts with `'R '` or exceeds 30 chars), a keyword scan of the `endereco` string against a known-bairros list is attempted: `TURU, RECANTO, COHAB, ANJO DA GUARDA, CIDADE OPERARIA, PACO, MIRITIUA, LUMIAR, CENTRO, IPEM, VINHAIS`. Falls back to `''` (empty string) if none match.
+- At module initialization, `nota-mapper.js` loads the full bairro list from `docs/neighborhoods.txt` into `KNOWN_BAIRROS` (sorted longest-first to avoid partial matches). If the file is not found, falls back to the hardcoded minimum list: `TURU, RECANTO, COHAB, ANJO DA GUARDA, CIDADE OPERARIA, PACO, MIRITIUA, LUMIAR, CENTRO, IPEM, VINHAIS`.
+- If no bairro is parsed from the address (or the parsed value starts with `'R '` or exceeds 30 chars), a two-pass keyword scan is run: first against `endereco + referencia`; if not found, against the full `blockText`. Falls back to `''` (empty string) if none match.
 
 **`observacaoConsolidada` structure:**
 Built as: `Turno: <turno>. <referencia_limpa> Tel: (<ddd>) <numero> / ...`
@@ -159,9 +164,9 @@ Built as: `Turno: <turno>. <referencia_limpa> Tel: (<ddd>) <numero> / ...`
 | BALSAS | 112 |
 | ARAGUAINA | 249 |
 
-- To add a new city/team, update `CITY_TEAM_MAP` in `nota-mapper.js` (line ~131). The key must be the normalized uppercase city name as it appears after address parsing.
+- To add a new city/team, update `CITY_TEAM_MAP` in `nota-mapper.js` (line ~156). The key must be the normalized uppercase city name as it appears after address parsing.
 
-**API JSON contract:** see `docs/struct_api_controlmob.json` for the full field schema sent to Control Mob.
+**API JSON contract:** see `docs/struct_api_controlmob.json` for the full field schema sent to Control Mob. See also `docs/example_REVISAO.pdf` and `docs/example_STOF.pdf` for sample PDFs used for testing edge cases.
 
 ## api-proxy.js
 
