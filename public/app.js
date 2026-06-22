@@ -329,6 +329,10 @@ function openEditModal(index) {
         <input type="text" id="edit-item-desc-${itemIdx}" value="${itm.descProduto.replace(/"/g, '&quot;')}">
       </div>
       <div class="form-group">
+        <label>Código Produto (Essencial)</label>
+        <input type="text" id="edit-item-cod-${itemIdx}" value="${itm.nroProduto}">
+      </div>
+      <div class="form-group">
         <label>Valor Montagem (Comissão)${itm.estofOverride ? ' <span class="estof-label">R$25 — ESTOF</span>' : itm.revisaoOverride ? ' <span class="revisao-label">R$20 — REVISÃO</span>' : ''}</label>
         <input type="number" step="0.01" id="edit-item-val-mont-${itemIdx}" value="${itm.valorMontagem}" ${itm.estofOverride ? 'class="input-estof-override"' : itm.revisaoOverride ? 'class="input-revisao-override"' : ''}>
       </div>
@@ -413,10 +417,6 @@ function openEditModal(index) {
         </div>
         <div class="editor-fields">
           <div class="form-group">
-            <label>Código Produto (Essencial)</label>
-            <input type="text" id="edit-item-cod" value="${item.nroProduto}">
-          </div>
-          <div class="form-group">
             <label>Nº Pedido</label>
             <input type="number" id="edit-item-pedido" value="${item.nroPedido}">
           </div>
@@ -478,7 +478,6 @@ window.saveActiveOrder = function(index) {
   client.idEquipe = equipeVal !== '' ? parseInt(equipeVal, 10) : null;
 
   // Coleta dados da Aba Item — campos compartilhados
-  const nroProduto = document.getElementById('edit-item-cod').value.trim();
   const nroPedido = parseInt(document.getElementById('edit-item-pedido').value, 10) || 0;
   const nroFilial = parseInt(document.getElementById('edit-item-filial').value, 10) || 0;
   const idEmpresa = parseInt(document.getElementById('edit-item-empresa').value, 10) || 0;
@@ -486,12 +485,12 @@ window.saveActiveOrder = function(index) {
   // Coleta dados por item
   ordem.itens.forEach((itm, itemIdx) => {
     itm.descProduto = document.getElementById(`edit-item-desc-${itemIdx}`).value.trim();
+    itm.nroProduto = document.getElementById(`edit-item-cod-${itemIdx}`).value.trim();
     itm.valorMontagem = parseFloat(document.getElementById(`edit-item-val-mont-${itemIdx}`).value) || 0.0;
     itm.valorUnitario = parseFloat(document.getElementById(`edit-item-val-unit-${itemIdx}`).value) || 0.0;
     itm.quantidade = parseInt(document.getElementById(`edit-item-qtd-${itemIdx}`).value, 10) || 1;
     itm.dataPrevisaoMontagem = document.getElementById(`edit-item-prev-${itemIdx}`).value;
     itm.dataPrevisaoEntrega = itm.dataPrevisaoMontagem;
-    itm.nroProduto = nroProduto;
     itm.nroPedido = nroPedido;
     itm.nroFilial = nroFilial;
   });

@@ -48,6 +48,26 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     // 2. Mapeamento para a estrutura JSON da API
     const ordensMapeadas = mapTextToJSON(rawText);
 
+    // Validação de integridade: unicidade de nroProduto dentro de cada itens[] e no lote inteiro
+    let loteValido = true;
+    for (const ordem of ordensMapeadas) {
+      const nrosPorOM = ordem.itens.map(it => it.nroProduto);
+      const duplicatasOM = nrosPorOM.filter((v, i, arr) => arr.indexOf(v) !== i);
+      if (duplicatasOM.length > 0) {
+        console.warn(`[Server] AVISO: nroProduto duplicado nos itens da OM nroPedido=${ordem.ordemServico.nroPedido}: ${[...new Set(duplicatasOM)].join(', ')}`);
+        loteValido = false;
+      }
+    }
+    const todosNroProduto = ordensMapeadas.flatMap(o => o.itens.map(it => it.nroProduto));
+    const duplicatasGlobal = todosNroProduto.filter((v, i, arr) => arr.indexOf(v) !== i);
+    if (duplicatasGlobal.length > 0) {
+      console.warn(`[Server] AVISO: nroProduto duplicado entre OMs do lote: ${[...new Set(duplicatasGlobal)].join(', ')}`);
+      loteValido = false;
+    }
+    if (loteValido) {
+      console.log(`[Server] Validação OK: todos os ${todosNroProduto.length} nroProduto são únicos (por OM e no lote).`);
+    }
+
     console.log(`[Server] Processamento concluído. ${ordensMapeadas.length} ordens identificadas.`);
 
     return res.json({

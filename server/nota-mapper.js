@@ -237,6 +237,7 @@ function mapTextToJSON(rawText) {
     }
   }
 
+  // Passagem por OM: garante unicidade de nroProduto dentro de cada itens[]
   for (const ordem of groupedOrdens.values()) {
     const seen = new Set();
     for (const item of ordem.itens) {
@@ -244,6 +245,17 @@ function mapTextToJSON(rawText) {
         item.nroProduto = String(Math.floor(Math.random() * 900000) + 100000);
       }
       seen.add(item.nroProduto);
+    }
+  }
+
+  // Passagem global: garante unicidade de nroProduto entre todas as OMs do lote
+  const globalUsedNroProduto = new Set();
+  for (const ordem of groupedOrdens.values()) {
+    for (const item of ordem.itens) {
+      while (globalUsedNroProduto.has(item.nroProduto)) {
+        item.nroProduto = String(Math.floor(Math.random() * 900000) + 100000);
+      }
+      globalUsedNroProduto.add(item.nroProduto);
     }
   }
 
