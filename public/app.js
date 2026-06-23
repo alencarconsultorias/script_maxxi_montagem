@@ -321,46 +321,50 @@ function openEditModal(index) {
   document.getElementById('modal-client-name').textContent = client.nomeCliente;
   document.getElementById('modal-confirm-btn').onclick = () => saveActiveOrder(index);
 
-  const itemCardsHtml = ordem.itens.map((itm, itemIdx) => `
-    <div class="item-card${ordem.itens.length > 1 ? ' multi' : ''}">
-      ${ordem.itens.length > 1 ? `<div class="item-card-header">Produto ${itemIdx + 1} de ${ordem.itens.length}</div>` : ''}
-      <div class="form-group span-2">
-        <label>Descrição do Produto</label>
-        <input type="text" id="edit-item-desc-${itemIdx}" value="${itm.descProduto.replace(/"/g, '&quot;')}">
-      </div>
-      <div class="form-group">
-        <label>Código Produto (Essencial)</label>
-        <input type="text" id="edit-item-cod-${itemIdx}" value="${itm.nroProduto}">
-      </div>
-      <div class="form-group">
-        <label>Valor Montagem (Comissão)${itm.estofOverride ? ' <span class="estof-label">R$25 — ESTOF</span>' : itm.revisaoOverride ? ' <span class="revisao-label">R$20 — REVISÃO</span>' : ''}</label>
-        <input type="number" step="0.01" id="edit-item-val-mont-${itemIdx}" value="${itm.valorMontagem}" ${itm.estofOverride ? 'class="input-estof-override"' : itm.revisaoOverride ? 'class="input-revisao-override"' : ''}>
-      </div>
-      <div class="form-group">
-        <label>Valor Unitário (Base)</label>
-        <input type="number" step="0.01" id="edit-item-val-unit-${itemIdx}" value="${itm.valorUnitario}">
-      </div>
-      <div class="form-group">
-        <label>Quantidade</label>
-        <input type="number" id="edit-item-qtd-${itemIdx}" value="${itm.quantidade}">
-      </div>
-      <div class="form-group">
-        <label>Data Prev. Montagem</label>
-        <input type="date" id="edit-item-prev-${itemIdx}" value="${itm.dataPrevisaoMontagem}">
+  const itemListHtml = ordem.itens.map((itm, itemIdx) => `
+    <div class="item-list-row">
+      <div class="item-list-badge">${itemIdx + 1}</div>
+      <div class="item-list-body">
+        <div class="form-group">
+          <label>Descrição do Produto</label>
+          <input type="text" id="edit-item-desc-${itemIdx}" value="${itm.descProduto.replace(/"/g, '&quot;')}">
+        </div>
+        <div class="item-list-fields">
+          <div class="form-group">
+            <label>Código (Essencial)</label>
+            <input type="text" id="edit-item-cod-${itemIdx}" value="${itm.nroProduto}">
+          </div>
+          <div class="form-group">
+            <label>Valor Mont.${itm.estofOverride ? ' <span class="estof-label">ESTOF</span>' : itm.revisaoOverride ? ' <span class="revisao-label">REVISÃO</span>' : ''}</label>
+            <input type="number" step="0.01" id="edit-item-val-mont-${itemIdx}" value="${itm.valorMontagem}" ${itm.estofOverride ? 'class="input-estof-override"' : itm.revisaoOverride ? 'class="input-revisao-override"' : ''}>
+          </div>
+          <div class="form-group">
+            <label>Valor Unit.</label>
+            <input type="number" step="0.01" id="edit-item-val-unit-${itemIdx}" value="${itm.valorUnitario}">
+          </div>
+          <div class="form-group">
+            <label>Qtd.</label>
+            <input type="number" id="edit-item-qtd-${itemIdx}" value="${itm.quantidade}">
+          </div>
+          <div class="form-group">
+            <label>Data Prev.</label>
+            <input type="date" id="edit-item-prev-${itemIdx}" value="${itm.dataPrevisaoMontagem}">
+          </div>
+        </div>
       </div>
     </div>
   `).join('');
 
   document.getElementById('modal-body').innerHTML = `
-    <div class="editor-two-col">
+    <div class="editor-layout">
 
-      <!-- SEÇÃO CLIENTE -->
+      <!-- SEÇÃO CLIENTE (horizontal agrupada) -->
       <div class="editor-section">
         <div class="editor-section-title">
           <i data-lucide="user"></i> Dados do Cliente (OS)
         </div>
-        <div class="editor-fields">
-          <div class="form-group span-2">
+        <div class="editor-fields-h">
+          <div class="form-group fh-span-2">
             <label>Nome do Cliente</label>
             <input type="text" id="edit-client-nome" value="${client.nomeCliente}">
           </div>
@@ -372,6 +376,10 @@ function openEditModal(index) {
             <label>Telefone</label>
             <input type="text" id="edit-client-fone" value="${client.nroTelefone}">
           </div>
+          <div class="form-group fh-span-2">
+            <label>Endereço Completo</label>
+            <input type="text" id="edit-client-end" value="${client.endereco}">
+          </div>
           <div class="form-group">
             <label>CEP (Essencial)</label>
             <input type="text" id="edit-client-cep" value="${client.cep}" maxlength="8">
@@ -379,10 +387,6 @@ function openEditModal(index) {
           <div class="form-group">
             <label>Número</label>
             <input type="text" id="edit-client-num" value="${client.numero}">
-          </div>
-          <div class="form-group span-2">
-            <label>Endereço Completo</label>
-            <input type="text" id="edit-client-end" value="${client.endereco}">
           </div>
           <div class="form-group">
             <label>Bairro</label>
@@ -403,19 +407,20 @@ function openEditModal(index) {
               ${TEAM_OPTIONS.replace(`value="${client.idEquipe}"`, `value="${client.idEquipe}" selected`)}
             </select>
           </div>
-          <div class="form-group span-2">
+          <div class="form-group fh-span-4">
             <label>Observações Consolidadas</label>
-            <textarea id="edit-client-obs" rows="3">${client.observacao}</textarea>
+            <textarea id="edit-client-obs" rows="2">${client.observacao}</textarea>
           </div>
         </div>
       </div>
 
-      <!-- SEÇÃO ITEM -->
+      <!-- SEÇÃO ITENS (lista) -->
       <div class="editor-section">
         <div class="editor-section-title">
-          <i data-lucide="package"></i> Item / Montagem
+          <i data-lucide="package"></i> Itens / Montagem
+          <span class="items-section-count">${ordem.itens.length} item${ordem.itens.length > 1 ? 's' : ''}</span>
         </div>
-        <div class="editor-fields">
+        <div class="editor-meta-row">
           <div class="form-group">
             <label>Nº Pedido</label>
             <input type="number" id="edit-item-pedido" value="${item.nroPedido}">
@@ -428,7 +433,9 @@ function openEditModal(index) {
             <label>ID Empresa</label>
             <input type="number" id="edit-item-empresa" value="${client.idEmpresa}">
           </div>
-          ${itemCardsHtml}
+        </div>
+        <div class="item-list">
+          ${itemListHtml}
         </div>
       </div>
 

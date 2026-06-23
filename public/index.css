@@ -913,13 +913,11 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Two-section side-by-side editor layout */
-.editor-two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-  margin-bottom: 20px;
-  align-items: start;
+/* Editor layout: client above, items below */
+.editor-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .editor-section {
@@ -946,6 +944,106 @@ body {
   flex-shrink: 0;
 }
 
+/* Badge de contagem de itens no título da seção */
+.items-section-count {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--border-color);
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Grid horizontal 4 colunas para dados do cliente */
+.editor-fields-h {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.editor-fields-h .fh-span-2 {
+  grid-column: span 2;
+}
+
+.editor-fields-h .fh-span-4 {
+  grid-column: 1 / -1;
+}
+
+/* Linha de metadados (Nº Pedido, Filial, ID Empresa) */
+.editor-meta-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.editor-meta-row .form-group {
+  flex: 1;
+  min-width: 100px;
+  max-width: 200px;
+}
+
+/* Lista de itens */
+.item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item-list-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--brand-blue);
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-secondary);
+}
+
+.item-list-badge {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-blue);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 22px;
+}
+
+.item-list-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.item-list-body > .form-group {
+  width: 100%;
+}
+
+/* Campos secundários do item em linha horizontal */
+.item-list-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.item-list-fields .form-group {
+  flex: 1;
+  min-width: 110px;
+}
+
+/* Mantido para compatibilidade com outros usos */
 .editor-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1299,14 +1397,16 @@ body {
     gap: 12px;
   }
 
-  .editor-two-col {
-    grid-template-columns: 1fr;
-    gap: 20px;
+  .editor-fields-h {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .editor-section + .editor-section {
-    padding-top: 16px;
-    border-top: 1px solid var(--border-color);
+  .editor-fields-h .fh-span-2 {
+    grid-column: span 2;
+  }
+
+  .editor-fields-h .fh-span-4 {
+    grid-column: 1 / -1;
   }
 
   .modal-overlay {
@@ -1491,6 +1591,29 @@ body {
 
   .editor-fields .form-group.span-2 {
     grid-column: span 1;
+  }
+
+  /* Client fields em coluna única no celular */
+  .editor-fields-h {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .editor-fields-h .fh-span-2,
+  .editor-fields-h .fh-span-4 {
+    grid-column: 1 / -1;
+  }
+
+  .editor-meta-row {
+    flex-wrap: wrap;
+  }
+
+  .editor-meta-row .form-group {
+    min-width: 80px;
+    max-width: unset;
+  }
+
+  .item-list-fields .form-group {
+    min-width: 90px;
   }
 
   .editor-tabs {
