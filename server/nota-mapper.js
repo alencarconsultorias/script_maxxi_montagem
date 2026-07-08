@@ -424,7 +424,8 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
     if (nomeCliente === 'CLIENTE NÃO IDENTIFICADO') {
       // Remove telefones antes de dividir — necessário quando o texto é plano (sem \n)
       const clientPartClean = clientPart
-        .replace(/\(?\d{2}\)?\s*\d{8,9}/g, '')
+        .replace(/\(?\d{2}\)?\s*\d{8,9}/g, '')  // telefone padrão BR: (DD) 8-9 dígitos
+        .replace(/\(\d+\)\s*\d*/g, '')            // ruído tipo (241)5068 ou (0)0
         .replace(/\s\s+/g, ' ')
         .trim();
       const fallbackClientLines = clientPartClean.split(/[\r\n]+/)
