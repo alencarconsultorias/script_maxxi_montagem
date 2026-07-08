@@ -318,6 +318,26 @@ body {
   color: var(--text-muted);
 }
 
+.obs-limit-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.obs-char-counter {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: right;
+  margin-top: 2px;
+}
+
+.obs-char-counter.obs-counter-warn {
+  color: #c0392b;
+  font-weight: 600;
+}
+
 /* =============================================
    BUTTONS
    ============================================= */

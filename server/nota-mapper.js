@@ -546,6 +546,9 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
     observacaoConsolidada += ` Tel: ${phoneList}`;
   }
   observacaoConsolidada = cleanText(observacaoConsolidada);
+  if (observacaoConsolidada.length > 500) {
+    observacaoConsolidada = observacaoConsolidada.substring(0, 500);
+  }
 
   return {
     codigoInternoMontador: "",

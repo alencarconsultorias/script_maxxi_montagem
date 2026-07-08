@@ -408,8 +408,9 @@ function openEditModal(index) {
             </select>
           </div>
           <div class="form-group fh-span-4">
-            <label>Observações Consolidadas</label>
-            <textarea id="edit-client-obs" rows="2">${client.observacao}</textarea>
+            <label>Observações Consolidadas <small class="obs-limit-hint">(máx. 500 caracteres)</small></label>
+            <textarea id="edit-client-obs" rows="2" maxlength="500">${client.observacao}</textarea>
+            <small id="obs-char-counter" class="obs-char-counter ${client.observacao.length > 450 ? 'obs-counter-warn' : ''}">${client.observacao.length}/500</small>
           </div>
         </div>
       </div>
@@ -444,6 +445,14 @@ function openEditModal(index) {
 
   document.getElementById('edit-modal-overlay').style.display = 'flex';
   lucide.createIcons({ nameAttr: 'data-lucide' });
+
+  const obsTextarea = document.getElementById('edit-client-obs');
+  const obsCounter = document.getElementById('obs-char-counter');
+  obsTextarea.addEventListener('input', () => {
+    const len = obsTextarea.value.length;
+    obsCounter.textContent = `${len}/500`;
+    obsCounter.classList.toggle('obs-counter-warn', len > 450);
+  });
 }
 
 // Fecha o modal sem salvar
@@ -479,7 +488,7 @@ window.saveActiveOrder = function(index) {
   client.bairro = document.getElementById('edit-client-bairro').value.trim();
   client.cidade = document.getElementById('edit-client-cidade').value.trim();
   client.uf = document.getElementById('edit-client-uf').value.trim().toUpperCase();
-  client.observacao = document.getElementById('edit-client-obs').value.trim();
+  client.observacao = document.getElementById('edit-client-obs').value.trim().substring(0, 500);
   client.observacaoPedido = client.observacao;
   const equipeVal = document.getElementById('edit-client-equipe').value;
   client.idEquipe = equipeVal !== '' ? parseInt(equipeVal, 10) : null;
@@ -500,6 +509,7 @@ window.saveActiveOrder = function(index) {
     itm.dataPrevisaoEntrega = itm.dataPrevisaoMontagem;
     itm.nroPedido = nroPedido;
     itm.nroFilial = nroFilial;
+    itm.observacaoMontagem = client.observacao;
   });
 
   // Sincroniza dados cruzados
@@ -524,6 +534,36 @@ btnPublishAll.addEventListener('click', async () => {
   if (!url) {
     alert('Erro: A URL de destino da API é obrigatória.');
     return;
+  }
+
+  // Valida limite de 500 caracteres nos campos de observação
+  const OBS_LIMIT = 500;
+  const oversizedOrders = sessionState.orders.filter(ordem => {
+    const obsMain = (ordem.ordemServico.observacao || '').length > OBS_LIMIT;
+    const obsPedido = (ordem.ordemServico.observacaoPedido || '').length > OBS_LIMIT;
+    const obsItem = ordem.itens.some(itm => (itm.observacaoMontagem || '').length > OBS_LIMIT);
+    return obsMain || obsPedido || obsItem;
+  });
+
+  if (oversizedOrders.length > 0) {
+    const detalhes = oversizedOrders.map(o => {
+      const len = Math.max(
+        (o.ordemServico.observacao || '').length,
+        (o.ordemServico.observacaoPedido || '').length,
+        ...o.itens.map(itm => (itm.observacaoMontagem || '').length)
+      );
+      return `• ${o.ordemServico.nomeCliente} — Pedido ${o.ordemServico.nroPedido} (${len} caracteres)`;
+    }).join('\n');
+
+    const continuar = confirm(
+      `⚠️ ATENÇÃO — Limite de ${OBS_LIMIT} caracteres excedido\n\n` +
+      `${oversizedOrders.length} ordem(ns) possuem campos de observação acima do limite permitido pela API.\n` +
+      `Isso pode causar erros de validação no envio.\n\n` +
+      `Pedidos afetados:\n${detalhes}\n\n` +
+      `Recomendado: feche este diálogo, edite as observações desses pedidos e tente novamente.\n\n` +
+      `Clique em OK para publicar mesmo assim, ou Cancelar para corrigir antes de enviar.`
+    );
+    if (!continuar) return;
   }
 
   // Prepara o Monitor de logs
