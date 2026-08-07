@@ -377,8 +377,9 @@ function openEditModal(index) {
             <input type="text" id="edit-client-fone" value="${client.nroTelefone}">
           </div>
           <div class="form-group fh-span-2">
-            <label>Endereço Completo</label>
-            <input type="text" id="edit-client-end" value="${client.endereco}">
+            <label>Endereço Completo <small class="obs-limit-hint">(máx. 200 caracteres)</small></label>
+            <input type="text" id="edit-client-end" value="${client.endereco}" maxlength="200">
+            <small id="end-char-counter" class="obs-char-counter ${client.endereco.length > 180 ? 'obs-counter-warn' : ''}">${client.endereco.length}/200</small>
           </div>
           <div class="form-group">
             <label>CEP (Essencial)</label>
@@ -453,6 +454,14 @@ function openEditModal(index) {
     obsCounter.textContent = `${len}/500`;
     obsCounter.classList.toggle('obs-counter-warn', len > 450);
   });
+
+  const endInput = document.getElementById('edit-client-end');
+  const endCounter = document.getElementById('end-char-counter');
+  endInput.addEventListener('input', () => {
+    const len = endInput.value.length;
+    endCounter.textContent = `${len}/200`;
+    endCounter.classList.toggle('obs-counter-warn', len > 180);
+  });
 }
 
 // Fecha o modal sem salvar
@@ -483,7 +492,7 @@ window.saveActiveOrder = function(index) {
   client.cpf = document.getElementById('edit-client-cpf').value.trim().replace(/\D/g, '');
   client.cep = document.getElementById('edit-client-cep').value.trim().replace(/\D/g, '');
   client.nroTelefone = document.getElementById('edit-client-fone').value.trim();
-  client.endereco = document.getElementById('edit-client-end').value.trim();
+  client.endereco = document.getElementById('edit-client-end').value.trim().substring(0, 200);
   client.numero = document.getElementById('edit-client-num').value.trim();
   client.bairro = document.getElementById('edit-client-bairro').value.trim();
   client.cidade = document.getElementById('edit-client-cidade').value.trim();
@@ -534,6 +543,28 @@ btnPublishAll.addEventListener('click', async () => {
   if (!url) {
     alert('Erro: A URL de destino da API é obrigatória.');
     return;
+  }
+
+  // Valida limite de 200 caracteres no campo endereço
+  const END_LIMIT = 200;
+  const oversizedEnd = sessionState.orders.filter(ordem =>
+    (ordem.ordemServico.endereco || '').length > END_LIMIT
+  );
+
+  if (oversizedEnd.length > 0) {
+    const detalhesEnd = oversizedEnd.map(o =>
+      `• ${o.ordemServico.nomeCliente} — Pedido ${o.ordemServico.nroPedido} (${(o.ordemServico.endereco || '').length} caracteres)`
+    ).join('\n');
+
+    const continuarEnd = confirm(
+      `⚠️ ATENÇÃO — Limite de ${END_LIMIT} caracteres excedido no campo Endereço\n\n` +
+      `${oversizedEnd.length} ordem(ns) possuem endereço acima do limite permitido pela API.\n` +
+      `Isso pode causar erros de validação no envio.\n\n` +
+      `Pedidos afetados:\n${detalhesEnd}\n\n` +
+      `Recomendado: feche este diálogo, edite o endereço desses pedidos e tente novamente.\n\n` +
+      `Clique em OK para publicar mesmo assim, ou Cancelar para corrigir antes de enviar.`
+    );
+    if (!continuarEnd) return;
   }
 
   // Valida limite de 500 caracteres nos campos de observação

@@ -583,7 +583,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
       complemento: "",
       cpf: "",
       dataPrevisaoMontagem: formattedDate,
-      endereco: endereco || "ENDEREÇO NÃO IDENTIFICADO",
+      endereco: (endereco || "ENDEREÇO NÃO IDENTIFICADO").slice(0, 200),
       idEmpresa: 0,
       idEquipe: CITY_TEAM_MAP[cidade.toUpperCase()] || null,
       nomeCliente: nomeCliente,
