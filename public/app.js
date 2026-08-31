@@ -10,7 +10,9 @@ const TEAM_MAP = {
   154: 'SAO MATEUS',
   112: 'BALSAS',
   249: 'ARAGUAINA',
+  194: 'PINHEIRO',
 };
+
 const TEAM_OPTIONS = Object.entries(TEAM_MAP)
   .map(([id, name]) => `<option value="${id}">${name} (${id})</option>`)
   .join('');
@@ -138,7 +140,7 @@ function handleFile(file) {
   fileSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
   fileDetails.style.display = 'block';
   dropzone.style.display = 'none';
-  
+
   log('info', `Arquivo selecionado: ${file.name}. Iniciando leitura...`);
 
   const formData = new FormData();
@@ -149,38 +151,38 @@ function handleFile(file) {
     method: 'POST',
     body: formData
   })
-  .then(res => {
-    if (!res.ok) throw new Error('Falha ao processar o arquivo no servidor.');
-    return res.json();
-  })
-  .then(result => {
-    if (result.success && result.data.length > 0) {
-      sessionState.orders = result.data;
-      sessionState.filename = file.name;
+    .then(res => {
+      if (!res.ok) throw new Error('Falha ao processar o arquivo no servidor.');
+      return res.json();
+    })
+    .then(result => {
+      if (result.success && result.data.length > 0) {
+        sessionState.orders = result.data;
+        sessionState.filename = file.name;
 
-      // Exibe sucesso
-      extractedCount.textContent = result.count;
-      extractionAlert.style.display = 'flex';
+        // Exibe sucesso
+        extractedCount.textContent = result.count;
+        extractionAlert.style.display = 'flex';
 
-      // Habilita as próximas etapas
-      enableSection(sectionDefaults);
-      enableSection(sectionReview);
-      enableSection(sectionApi);
-      btnApplyDefaults.disabled = false;
-      btnPublishAll.disabled = false;
+        // Habilita as próximas etapas
+        enableSection(sectionDefaults);
+        enableSection(sectionReview);
+        enableSection(sectionApi);
+        btnApplyDefaults.disabled = false;
+        btnPublishAll.disabled = false;
 
-      // Atualiza tabela
-      renderTable();
-      log('success', `Sucesso! Extraídas ${result.count} ordens do PDF.`);
-    } else {
-      throw new Error(result.error || 'Nenhuma ordem identificada no PDF.');
-    }
-  })
-  .catch(err => {
-    log('error', `Erro na extração: ${err.message}`);
-    alert(`Erro ao ler PDF: ${err.message}`);
-    resetSession();
-  });
+        // Atualiza tabela
+        renderTable();
+        log('success', `Sucesso! Extraídas ${result.count} ordens do PDF.`);
+      } else {
+        throw new Error(result.error || 'Nenhuma ordem identificada no PDF.');
+      }
+    })
+    .catch(err => {
+      log('error', `Erro na extração: ${err.message}`);
+      alert(`Erro ao ler PDF: ${err.message}`);
+      resetSession();
+    });
 }
 
 // --- CONFIGURAÇÃO DE DEFAULTS (STEP 2) ---
@@ -217,7 +219,7 @@ btnApplyDefaults.addEventListener('click', () => {
 
   renderTable();
   log('warning', 'Valores Padrão Globais aplicados a todas as notas com sucesso!');
-  
+
   // Efeito rápido de piscar para feedback visual
   btnApplyDefaults.classList.add('btn-success');
   setTimeout(() => btnApplyDefaults.classList.remove('btn-success'), 1000);
@@ -227,7 +229,7 @@ btnApplyDefaults.addEventListener('click', () => {
 
 function renderTable() {
   ordersTbody.innerHTML = '';
-  
+
   if (sessionState.orders.length === 0) {
     ordersTbody.innerHTML = `<tr><td colspan="10" class="empty-table">Nenhum PDF carregado ainda. Aguardando arquivo...</td></tr>`;
     badgeCounterContainer.style.display = 'none';
@@ -465,7 +467,7 @@ function openEditModal(index) {
 }
 
 // Fecha o modal sem salvar
-window.closeEditModal = function() {
+window.closeEditModal = function () {
   sessionState.activeEditorIndex = null;
   document.getElementById('edit-modal-overlay').style.display = 'none';
   renderTable();
@@ -483,7 +485,7 @@ function toggleRow(index) {
 }
 
 // Salva alterações da nota em edição de volta para a memória
-window.saveActiveOrder = function(index) {
+window.saveActiveOrder = function (index) {
   const ordem = sessionState.orders[index];
   const client = ordem.ordemServico;
 
@@ -601,7 +603,7 @@ btnPublishAll.addEventListener('click', async () => {
   monitorConsole.style.display = 'block';
   consoleLogs.innerHTML = '';
   log('info', `Iniciando publicação em lote de ${sessionState.orders.length} ordens...`);
-  
+
   const headers = {};
   if (key) headers['API_KEY'] = key;
   if (secret) headers['SECRET_KEY'] = secret;
@@ -733,15 +735,15 @@ function generateAndDownloadReport() {
     .then((content) => {
       const url = URL.createObjectURL(content);
       const link = document.createElement('a');
-      
+
       link.setAttribute('href', url);
       link.setAttribute('download', `Relatorio_Completo_${originalName}_${new Date().toISOString().slice(0, 10)}.zip`);
       link.style.visibility = 'hidden';
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       log('success', 'Relatório completo (.ZIP contendo CSV e JSON) exportado com sucesso!');
     })
     .catch((err) => {
@@ -793,10 +795,10 @@ function resetSession() {
 function log(type, msg) {
   const item = document.createElement('div');
   item.className = `log-item ${type}`;
-  
+
   const prefix = `[${new Date().toLocaleTimeString('pt-BR')}]`;
   item.innerHTML = `<strong>${prefix}</strong> ${msg}`;
-  
+
   consoleLogs.appendChild(item);
   consoleLogs.scrollTop = consoleLogs.scrollHeight;
   console.log(`${prefix} [${type.toUpperCase()}] ${msg}`);
