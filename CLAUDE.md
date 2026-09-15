@@ -19,7 +19,7 @@ No build step. No test suite. The app module is exported from `server/index.js` 
 
 ## Version
 
-Current version: **1.8.2** — tracked in `package.json`, `package-lock.json`, and the footer of `public/index.html`.
+Current version: **1.8.4** — tracked in `package.json`, `package-lock.json`, and the footer of `public/index.html`.
 
 > **Note:** bump version in all three files simultaneously whenever releasing.
 
@@ -66,10 +66,10 @@ All frontend logic is in a single `app.js` file. No framework, no bundler.
 1. Upload PDF → server parses and returns `orders` array.
 2. Global defaults (DataPrevisao override, CEP, Equipe) — applied to all orders at once. There is **no** global nroProduto override — it is generated per item at parse time. Global Equipe (`def-equipe`) overrides `idEquipe` for all orders if set.
 3. Review/edit each order — **modal popup** editor with two tabs:
-   - **Client tab:** nome, endereço, bairro, cidade, UF, CEP, telefone, equipe, observação.
+   - **Client tab:** nome, CPF, endereço (max 200 chars, enforced via `maxlength` + live counter), bairro, cidade, UF, CEP, telefone, equipe, observação.
    - **Item tab:** descProduto, valorMontagem, valorUnitario, datas de previsão.
 4. API credentials (API_KEY / SECRET_KEY).
-5. Publish + progress log.
+5. Publish + progress log. Publish is blocked (no override) if any order is missing `cpf`; it warns (with an override confirm) if any order's `endereco` exceeds 200 characters or `observacao` exceeds 500 characters.
 
 **Order summary badges:** shown above the review table — total, ESTOF count, REVISÃO count, DESMONTAGEM count.
 
@@ -111,6 +111,8 @@ This is the most fragile file. Any change to the Liliani PDF layout can break it
 - Default `cep`: `"65000000"` — should be overridden via frontend defaults.
 - `codigoInternoClassificacaoCliente` is always `"ML"`.
 - `nroTelefone` fallback when no phone found in block: `"999999999"`.
+- `cpf` — not present in the Liliani PDF, but required by the Control Mob API. `generateRandomCPF()` generates a random 11-digit CPF with valid check digits per item at parse time (fictitious, not the real client CPF). The frontend blocks publish (no override) if any order's `cpf` ends up empty.
+- `endereco` is truncated to 200 characters at parse time (`.slice(0, 200)`) and re-truncated on save in the editor — Control Mob's API rejects longer values.
 
 **`valorMontagem` override rules (applied in order, last wins):**
 0. Default (no rule matches) → `valorMontagem = 0`. The COMIS field from the PDF is **not** used.
