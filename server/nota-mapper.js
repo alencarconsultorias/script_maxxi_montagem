@@ -56,6 +56,32 @@ function parseBrazilianFloat(valueStr) {
 }
 
 /**
+ * Gera um CPF com dígitos verificadores válidos, porém aleatório e fictício.
+ * Usado como placeholder quando o PDF da Liliani não informa o CPF do cliente,
+ * já que a API do Control Mob exige o campo preenchido.
+ * @returns {string} CPF de 11 dígitos (somente números)
+ */
+function generateRandomCPF() {
+  const digits = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));
+
+  const calcCheckDigit = (base) => {
+    let sum = 0;
+    let weight = base.length + 1;
+    for (const d of base) {
+      sum += d * weight;
+      weight--;
+    }
+    const rest = sum % 11;
+    return rest < 2 ? 0 : 11 - rest;
+  };
+
+  const d10 = calcCheckDigit(digits);
+  const d11 = calcCheckDigit([...digits, d10]);
+
+  return [...digits, d10, d11].join('');
+}
+
+/**
  * Extrai o nome do montador do cabeçalho geral
  * @param {string} text Texto bruto do PDF
  * @returns {string} Nome/código do montador
@@ -581,7 +607,7 @@ function parseBlock(blockText, montadorGeral, dataAgendamentoOriginal, index, or
       codigoInternoClassificacaoCliente: "ML",
       codigoInternoCliente: "",
       complemento: "",
-      cpf: "",
+      cpf: generateRandomCPF(),
       dataPrevisaoMontagem: formattedDate,
       endereco: (endereco || "ENDEREÇO NÃO IDENTIFICADO").slice(0, 200),
       idEmpresa: 0,

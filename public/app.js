@@ -371,8 +371,8 @@ function openEditModal(index) {
             <input type="text" id="edit-client-nome" value="${client.nomeCliente}">
           </div>
           <div class="form-group">
-            <label>CPF (Essencial)</label>
-            <input type="text" id="edit-client-cpf" value="${client.cpf || ''}" placeholder="Apenas números">
+            <label>CPF (Essencial) <small class="obs-limit-hint">gerado automaticamente — não é o CPF real</small></label>
+            <input type="text" id="edit-client-cpf" value="${client.cpf || ''}" placeholder="Apenas números" maxlength="11">
           </div>
           <div class="form-group">
             <label>Telefone</label>
@@ -544,6 +544,23 @@ btnPublishAll.addEventListener('click', async () => {
 
   if (!url) {
     alert('Erro: A URL de destino da API é obrigatória.');
+    return;
+  }
+
+  // Exige CPF do cliente preenchido em todas as ordens antes de publicar
+  const missingCpf = sessionState.orders.filter(ordem => !(ordem.ordemServico.cpf || '').trim());
+
+  if (missingCpf.length > 0) {
+    const detalhesCpf = missingCpf.map(o =>
+      `• ${o.ordemServico.nomeCliente} — Pedido ${o.ordemServico.nroPedido}`
+    ).join('\n');
+
+    alert(
+      `❌ CPF do cliente é obrigatório\n\n` +
+      `${missingCpf.length} ordem(ns) estão sem CPF preenchido e não podem ser publicadas.\n\n` +
+      `Pedidos afetados:\n${detalhesCpf}\n\n` +
+      `Abra cada pedido listado, preencha o campo CPF na aba Cliente e tente publicar novamente.`
+    );
     return;
   }
 
