@@ -12,6 +12,7 @@ const TEAM_MAP = {
   249: 'ARAGUAINA',
   194: 'PINHEIRO',
   275: 'SANTA INES',
+  277: 'BELEM',
 };
 
 const TEAM_OPTIONS = Object.entries(TEAM_MAP)

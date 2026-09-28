@@ -73,7 +73,21 @@ All frontend logic is in a single `app.js` file. No framework, no bundler.
 
 **Order summary badges:** shown above the review table — total, ESTOF count, REVISÃO count, DESMONTAGEM count.
 
-**Equipe column and editor dropdown:** The review table has an "Equipe" column showing the team name resolved from `idEquipe` via `TEAM_MAP` (defined at the top of `app.js`). The client tab exposes a `<select>` dropdown to manually override `idEquipe` per order. `TEAM_MAP` in `app.js` is the inverse of `CITY_TEAM_MAP` in `nota-mapper.js` — keep both in sync if adding new cities/teams.
+**Equipe column and editor dropdown:** The review table has an "Equipe" column showing the team name resolved from `idEquipe` via `TEAM_MAP` (defined at the top of `app.js`). The client tab exposes a `<select>` dropdown to manually override `idEquipe` per order. `TEAM_MAP` in `app.js` is a superset of the inverse of `CITY_TEAM_MAP` in `nota-mapper.js`: every auto-assigned team must exist in `TEAM_MAP`, but some teams are **manual-only** (selectable in the dropdown, never auto-assigned by city):
+
+| idEquipe | Team | Auto-assigned? |
+|----------|------|----------------|
+| 107 | SAO LUIS | yes |
+| 108 | TERESINA | yes |
+| 125 | ZE DOCA | yes |
+| 154 | SAO MATEUS | yes |
+| 112 | BALSAS | yes |
+| 249 | ARAGUAINA | yes |
+| 194 | PINHEIRO | no — manual only |
+| 275 | SANTA INES | no — manual only |
+| 277 | BELEM | no — manual only |
+
+To make a manual-only team auto-assigned, add its city to `CITY_TEAM_MAP`.
 
 **`estofOverride` / `revisaoOverride` flags:** set by the parser on each item. The frontend uses them to style table rows and label the `valorMontagem` field (e.g., "R$25 — ESTOF", "R$20 — REVISÃO"). These flags travel with the order object but are not sent to the API.
 
@@ -166,7 +180,8 @@ Built as: `Turno: <turno>. <referencia_limpa> Tel: (<ddd>) <numero> / ...`
 | BALSAS | 112 |
 | ARAGUAINA | 249 |
 
-- To add a new city/team, update `CITY_TEAM_MAP` in `nota-mapper.js` (line ~156). The key must be the normalized uppercase city name as it appears after address parsing.
+- Teams added only to the frontend `TEAM_MAP` (PINHEIRO, SANTA INES, BELEM) are available for manual selection but orders from those cities get `idEquipe: null` until a `CITY_TEAM_MAP` entry is added.
+- To add a new city/team, update `CITY_TEAM_MAP` in `nota-mapper.js` (line ~182) and `TEAM_MAP` in `public/app.js`. The key must be the normalized uppercase city name as it appears after address parsing.
 
 **API JSON contract:** see `docs/struct_api_controlmob.json` for the full field schema sent to Control Mob. See also `docs/example_REVISAO.pdf` and `docs/example_STOF.pdf` for sample PDFs used for testing edge cases.
 
